@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Support App</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+
+<div class="text-center">
+    <h1 class="display-4">Support</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm">
+                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Index">Unsolved Tickets</a>
+            </div>
+            <div class="col-sm">
+                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Create">Create new</a>
+            </div>
+            <div class="col-sm">
+                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Completed">Solved Tickets</a>
+            </div>
+        </div>
+    </div>
+</div>
