@@ -10,7 +10,7 @@ using System.Linq;
 using Moq;
 using Microsoft.EntityFrameworkCore;
 
-namespace x
+namespace XunitTests
 {
     public class UnitTest1
     {
