@@ -14,6 +14,8 @@ namespace SupportApp.Models
                 serviceProvider.GetRequiredService<
                     DbContextOptions<SupportAppContext>>()))
             {
+                context.Database.EnsureCreated();
+                
                 // Look for any movies.
                 if (context.Ticket.Any())
                 {

@@ -29,6 +29,8 @@ namespace SupportApp
 
             services.AddDbContext<SupportAppContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
+
+            services.AddScoped(typeof(ISupportAppRepository<>), typeof(SupportAppRepository<>));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

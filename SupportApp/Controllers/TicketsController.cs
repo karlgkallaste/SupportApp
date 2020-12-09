@@ -12,36 +12,37 @@ namespace SupportApp.Controllers
 {
     public class TicketsController : Controller
     {
-        private readonly SupportAppContext _context;
+        private readonly ISupportAppRepository<Ticket> _ticketRepository;
 
-        public TicketsController(SupportAppContext context)
+        public TicketsController(ISupportAppRepository<Ticket> ticketRepository)
         {
-            _context = context;
+            _ticketRepository = ticketRepository;
         }
 
         // GET: Tickets
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            
-            return View(await _context.Ticket.OrderBy(m => m.CreatedAt).Where(m => m.Status == 0).ToListAsync());
+            var incompleteTickets = _ticketRepository.Find(ticket => ticket.Status == 0)
+                .OrderBy(ticket => ticket.CreatedAt)
+                .ToArray();
+            return View(incompleteTickets);
         }
-        // GET: Completed Tickets
-        public async Task<IActionResult> Completed()
-        {
 
-            return View(await _context.Ticket.Where(m => m.Status == 1).ToListAsync());
+        // GET: Completed Tickets
+        public IActionResult Completed()
+        {
+            return View(_ticketRepository.Find(m => m.Status == 1).ToArray());
         }
 
         // GET: Tickets/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var ticket = await _context.Ticket
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var ticket = _ticketRepository.GetById(id.Value);
             if (ticket == null)
             {
                 return NotFound();
@@ -61,14 +62,15 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")] Ticket ticket)
+        public IActionResult Create([Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")]
+            Ticket ticket)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(ticket);
-                await _context.SaveChangesAsync();
+                _ticketRepository.Add(ticket);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(ticket);
         }
 
@@ -80,11 +82,12 @@ namespace SupportApp.Controllers
                 return NotFound();
             }
 
-            var ticket = await _context.Ticket.FindAsync(id);
+            var ticket = _ticketRepository.GetById(id.Value);
             if (ticket == null)
             {
                 return NotFound();
             }
+
             return View(ticket);
         }
 
@@ -93,34 +96,33 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")] Ticket ticket)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")]
+            Ticket model)
         {
-            if (id != ticket.Id)
+            if (id != model.Id)
             {
                 return NotFound();
             }
 
             if (ModelState.IsValid)
             {
-                try
+                var ticket = _ticketRepository.GetById(id);
+                if (ticket == null)
                 {
-                    _context.Update(ticket);
-                    await _context.SaveChangesAsync();
+                    return NotFound();
                 }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!TicketExists(ticket.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+
+                ticket.Title = model.Title;
+                ticket.Description = model.Description;
+                ticket.Author = model.Author;
+                ticket.CompletedAt = model.CompletedAt;
+                ticket.Status = model.Status;
+                
+                _ticketRepository.Update(ticket);
                 return RedirectToAction(nameof(Index));
             }
-            return View(ticket);
+
+            return View(model);
         }
 
         // GET: Tickets/Delete/5
@@ -131,8 +133,7 @@ namespace SupportApp.Controllers
                 return NotFound();
             }
 
-            var ticket = await _context.Ticket
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var ticket = _ticketRepository.GetById(id.Value);
             if (ticket == null)
             {
                 return NotFound();
@@ -144,17 +145,15 @@ namespace SupportApp.Controllers
         // POST: Tickets/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var ticket = await _context.Ticket.FindAsync(id);
-            _context.Ticket.Remove(ticket);
-            await _context.SaveChangesAsync();
+            var ticket = _ticketRepository.GetById(id);
+            if (ticket == null)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+            _ticketRepository.Remove(ticket);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool TicketExists(int id)
-        {
-            return _context.Ticket.Any(e => e.Id == id);
         }
     }
 }
