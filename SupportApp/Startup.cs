@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportApp.Data;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Models.Tickets;
 
 namespace SupportApp
 {
@@ -29,8 +30,10 @@ namespace SupportApp
 
             services.AddDbContext<SupportAppContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
-
-            services.AddScoped(typeof(ISupportAppRepository<>), typeof(SupportAppRepository<>));
+            services.AddScoped<ISupportAppContext, SupportAppContext>();
+            
+            services.AddScoped<ITicketsFinder, TicketsFinder>();
+            services.AddScoped<ITicketsModifier, TicketsModifier>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

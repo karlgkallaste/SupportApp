@@ -1,7 +1,6 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 
-namespace SupportApp.Models
+namespace SupportApp.Models.Tickets
 {
     public class Ticket
     {
@@ -17,7 +16,6 @@ namespace SupportApp.Models
         {
             CreatedAt = DateTime.Now;
             Deadline = CreatedAt.AddDays(2);
-
         }
     }
 }

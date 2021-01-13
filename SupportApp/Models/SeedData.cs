@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SupportApp.Data;
 using System;
 using System.Linq;
+using SupportApp.Models.Tickets;
 
 namespace SupportApp.Models
 {

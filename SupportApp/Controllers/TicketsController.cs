@@ -1,48 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using SupportApp.Data;
-using SupportApp.Models;
+using SupportApp.Models.Tickets;
 
 namespace SupportApp.Controllers
 {
+    [Route("[controller]/[action]")]
     public class TicketsController : Controller
     {
-        private readonly ISupportAppRepository<Ticket> _ticketRepository;
+        private readonly ITicketsFinder _ticketsFinder;
+        private readonly ITicketsModifier _ticketsModifier;
 
-        public TicketsController(ISupportAppRepository<Ticket> ticketRepository)
+        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier)
         {
-            _ticketRepository = ticketRepository;
+            _ticketsFinder = ticketsFinder;
+            _ticketsModifier = ticketsModifier;
         }
 
         // GET: Tickets
         public IActionResult Index()
         {
-            var incompleteTickets = _ticketRepository.Find(ticket => ticket.Status == 0)
-                .OrderBy(ticket => ticket.CreatedAt)
-                .ToArray();
+            // var incompleteTickets = _ticketRepository.Find(ticket => ticket.Status == 0)
+            //     .OrderBy(ticket => ticket.CreatedAt)
+            //     .ToArray();
+            var incompleteTickets = _ticketsFinder.FindAllWithStatus(0);
             return View(incompleteTickets);
         }
 
         // GET: Completed Tickets
         public IActionResult Completed()
         {
-            return View(_ticketRepository.Find(m => m.Status == 1).ToArray());
+            var completeTickets = _ticketsFinder.FindAllWithStatus(1);
+            return View(completeTickets);
         }
 
         // GET: Tickets/Details/5
-        public IActionResult Details(int? id)
+        public IActionResult Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var ticket = _ticketRepository.GetById(id.Value);
+            var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
             {
                 return NotFound();
@@ -67,7 +61,7 @@ namespace SupportApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _ticketRepository.Add(ticket);
+                _ticketsModifier.Add(ticket);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -75,14 +69,10 @@ namespace SupportApp.Controllers
         }
 
         // GET: Tickets/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Edit(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var ticket = _ticketRepository.GetById(id.Value);
+            var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
             {
                 return NotFound();
@@ -94,7 +84,7 @@ namespace SupportApp.Controllers
         // POST: Tickets/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
+        [HttpPost("{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")]
             Ticket model)
@@ -106,7 +96,7 @@ namespace SupportApp.Controllers
 
             if (ModelState.IsValid)
             {
-                var ticket = _ticketRepository.GetById(id);
+                var ticket = _ticketsFinder.Find(id);
                 if (ticket == null)
                 {
                     return NotFound();
@@ -118,7 +108,7 @@ namespace SupportApp.Controllers
                 ticket.CompletedAt = model.CompletedAt;
                 ticket.Status = model.Status;
                 
-                _ticketRepository.Update(ticket);
+                _ticketsModifier.EditTicket(ticket);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -126,14 +116,9 @@ namespace SupportApp.Controllers
         }
 
         // GET: Tickets/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var ticket = _ticketRepository.GetById(id.Value);
+            var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
             {
                 return NotFound();
@@ -147,12 +132,7 @@ namespace SupportApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var ticket = _ticketRepository.GetById(id);
-            if (ticket == null)
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            _ticketRepository.Remove(ticket);
+            _ticketsModifier.RemoveTicket(id);
             return RedirectToAction(nameof(Index));
         }
     }
