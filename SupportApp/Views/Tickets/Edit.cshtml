@@ -1,4 +1,4 @@
-﻿@model SupportApp.Models.Tickets.Ticket
+﻿@model SupportApp.ViewModels.Tickets.TicketEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -22,16 +22,6 @@
                 <label asp-for="Description" class="control-label"></label>
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Author" class="control-label"></label>
-                <input asp-for="Author" class="form-control" />
-                <span asp-validation-for="Author" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="CompletedAt" class="control-label"></label>

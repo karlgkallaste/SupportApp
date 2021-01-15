@@ -6,6 +6,7 @@ namespace SupportApp.Models.Tickets
     public interface ITicketsModifier
     {
         Ticket Add(Ticket ticket);
+        Ticket MarkDone(Ticket ticket);
         void RemoveTicket(int id);
 
         Ticket EditTicket(Ticket ticket);
@@ -27,7 +28,6 @@ namespace SupportApp.Models.Tickets
             _context.SaveChanges();
             return ticket;
         }
-
         public void RemoveTicket(int id)
         {
             var ticketSet = _context.Set<Ticket>();
@@ -55,6 +55,14 @@ namespace SupportApp.Models.Tickets
 
             ticketSet.RemoveRange(tickets);
             _context.SaveChanges();
+        }
+        public Ticket MarkDone(Ticket ticket)
+        {
+            var ticketSet = _context.Set<Ticket>();
+            ticket.Status = 1;
+            ticketSet.Update(ticket);
+            _context.SaveChanges();
+            return ticket;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿@model SupportApp.Models.Tickets.Ticket
+﻿@model SupportApp.ViewModels.Tickets.TicketDetailsViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -8,7 +8,7 @@
 
 <div>
     <h4>Ticket</h4>
-    <hr />
+    <hr/>
     <dl class="row">
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Title)
@@ -21,12 +21,6 @@
         </dt>
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Author)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Author)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.CreatedAt)
@@ -46,15 +40,8 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Status)
         </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Deadline)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Deadline)
-        </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>

@@ -26,7 +26,7 @@ namespace SupportApp.Models.Tickets
 
         public IReadOnlyCollection<Ticket> FindAllWithStatus(int status)
         {
-            return _context.Queryable<Ticket>().Where(t => t.Status == status).ToArray();
+            return _context.Queryable<Ticket>().Where(t => t.Status == status).OrderBy(t=>t.CreatedAt).ToArray();
         }
     }
 }

@@ -5,6 +5,7 @@ using FluentAssertions.Common;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using SupportApp.Data;
 using SupportApp.Models.Tickets;
 
@@ -108,7 +109,7 @@ namespace XunitTests.Models.Tickets
         [Test]
         public void RemoveAllBy_Removes_All_Tickets_By_Author()
         {
-            {
+            
                 var fixture = new Fixture();
                 var contextMock = new Mock<ISupportAppContext>();
             
@@ -142,7 +143,33 @@ namespace XunitTests.Models.Tickets
                 ticketSetMock.Verify(c=>c.RemoveRange(
                     It.Is<Ticket[]>(a => a.AssertIsEquivalent(new []{ticket1, ticket2}))));
                 contextMock.Verify(c=>c.SaveChanges());
-            }
+            
         }
+
+        [Test]
+        public void MarkDone_Changes_Ticket_Status_To_1()
+        {
+            var fixture = new Fixture();
+            var contextMock = new Mock<ISupportAppContext>();
+            var ticketSetMock = new Mock<DbSet<Ticket>>();
+            contextMock.Setup(c => c.Set<Ticket>())
+                .Returns(ticketSetMock.Object);
+            
+            var sut = new TicketsModifier(contextMock.Object);
+            
+            
+            var newTicket = fixture.Create<Ticket>();
+            newTicket.Status = 0;
+            
+            //act
+            var result = sut.MarkDone(newTicket);
+            
+            //assert
+            result.Status.Should().Be(1);
+            ticketSetMock.Verify(c=>c.Update(newTicket), Times.Once);
+            contextMock.Verify(c=>c.SaveChanges());
+            
+        }
+
     }
 }

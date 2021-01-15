@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using AutoFixture;
 using Castle.Core.Internal;
@@ -21,16 +22,23 @@ namespace XunitTests.Models.Tickets
             var status = 5678;
             var expectedTicket1 = fixture.Create<Ticket>();
             expectedTicket1.Status = status;
+            expectedTicket1.CreatedAt =  DateTime.Now.AddSeconds(-2);
             var expectedTicket2 = fixture.Create<Ticket>();
             expectedTicket2.Status = status;
+            expectedTicket2.CreatedAt = DateTime.Now.AddSeconds(-5);
+            var expectedTicket3 = fixture.Create<Ticket>();
+            expectedTicket3.Status = status;
+            expectedTicket3.CreatedAt = DateTime.Now.AddSeconds(-9);
+            
             
             var tickets = new[]
             {
                 fixture.Create<Ticket>(),
-                expectedTicket1,
+                expectedTicket2,
+                expectedTicket3,
                 fixture.Create<Ticket>(),
                 fixture.Create<Ticket>(),
-                expectedTicket2
+                expectedTicket1
             };
             contextMock.Setup(c => c.Queryable<Ticket>())
                 .Returns(tickets.AsQueryable());
@@ -39,7 +47,8 @@ namespace XunitTests.Models.Tickets
             var result = sut.FindAllWithStatus(status);
             
             //assert
-            result.Should().BeEquivalentTo(expectedTicket1, expectedTicket2);
+            result.Should().BeEquivalentTo(new []{expectedTicket3, expectedTicket2, expectedTicket1}, 
+                conf => conf.WithStrictOrdering() );
 
         }
 

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<SupportApp.Models.Tickets.Ticket>
+﻿@model IEnumerable<SupportApp.ViewModels.Tickets.TicketListViewModel>
 
 @{
     ViewData["Title"] = "Completed";
@@ -15,18 +15,6 @@
             <th>
                 @Html.DisplayNameFor(model => model.Title)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Author)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CompletedAt)
-            </th>
             <th></th>
         </tr>
     </thead>
@@ -39,18 +27,6 @@
             </th>
             <td>
                 @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Author)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CompletedAt)
             </td>
             <td>
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a>

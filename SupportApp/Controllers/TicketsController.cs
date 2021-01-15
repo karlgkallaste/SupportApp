@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using SupportApp.Models.Tickets;
+using SupportApp.ViewModels.Tickets;
 
 namespace SupportApp.Controllers
 {
@@ -19,21 +22,29 @@ namespace SupportApp.Controllers
         // GET: Tickets
         public IActionResult Index()
         {
-            // var incompleteTickets = _ticketRepository.Find(ticket => ticket.Status == 0)
-            //     .OrderBy(ticket => ticket.CreatedAt)
-            //     .ToArray();
             var incompleteTickets = _ticketsFinder.FindAllWithStatus(0);
-            return View(incompleteTickets);
+            var viewModels = incompleteTickets.Select(t => new TicketListViewModel
+            {
+                Id = t.Id,
+                Title = t.Title
+            }).ToArray();
+            return View(viewModels);
         }
 
         // GET: Completed Tickets
         public IActionResult Completed()
         {
             var completeTickets = _ticketsFinder.FindAllWithStatus(1);
-            return View(completeTickets);
+            var viewModels = completeTickets.Select(t => new TicketListViewModel
+            {
+                Id = t.Id,
+                Title = t.Title
+            }).ToArray();
+            return View(viewModels);
         }
 
         // GET: Tickets/Details/5
+        [HttpGet("{id}")]
         public IActionResult Details(int id)
         {
             var ticket = _ticketsFinder.Find(id);
@@ -42,7 +53,17 @@ namespace SupportApp.Controllers
                 return NotFound();
             }
 
-            return View(ticket);
+            var viewModel = new TicketDetailsViewModel
+            {
+                Id = ticket.Id,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                CreatedAt = ticket.CreatedAt,
+                CompletedAt = ticket.CompletedAt,
+                Status = ticket.Status
+            };
+
+            return View(viewModel);
         }
 
         // GET: Tickets/Create
@@ -77,8 +98,16 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
+            var viewModel = new TicketEditViewModel
+            {
+                Id = ticket.Id,
+                Title = ticket.Title,
+                Description = ticket.Description,
+                CompletedAt = ticket.CompletedAt,
+                Status = ticket.Status
+            };
 
-            return View(ticket);
+            return View(viewModel);
         }
 
         // POST: Tickets/Edit/5
@@ -93,7 +122,6 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
-
             if (ModelState.IsValid)
             {
                 var ticket = _ticketsFinder.Find(id);
@@ -112,10 +140,11 @@ namespace SupportApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(model);
+            return View(in);
         }
 
         // GET: Tickets/Delete/5
+        [HttpGet("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var ticket = _ticketsFinder.Find(id);
@@ -133,6 +162,14 @@ namespace SupportApp.Controllers
         public IActionResult DeleteConfirmed(int id)
         {
             _ticketsModifier.RemoveTicket(id);
+            return RedirectToAction(nameof(Index));
+        }
+        
+        [HttpPost("{id}")]
+        public IActionResult MarkDone(int id)
+        {
+            var ticket = _ticketsFinder.Find(id);
+            _ticketsModifier.MarkDone(ticket);
             return RedirectToAction(nameof(Index));
         }
     }

@@ -9,6 +9,7 @@ using SupportApp.Controllers;
 using SupportApp.Data;
 using SupportApp.Models;
 using SupportApp.Models.Tickets;
+using SupportApp.ViewModels.Tickets;
 
 namespace XunitTests.Controllers
 {
@@ -32,12 +33,12 @@ namespace XunitTests.Controllers
         public void Index_returns_incomplete_tickets_that_are_ordered_by_created_at()
         {
             // Arrange
+            var ticket1 = _fixture.Create<Ticket>();
+            var ticket2 = _fixture.Create<Ticket>();
             var tickets = new[]
             {
-                _fixture.Create<Ticket>(),
-                _fixture.Create<Ticket>(),
-                _fixture.Create<Ticket>(),
-                _fixture.Create<Ticket>(),
+                ticket1,
+                ticket2,
             };
             
             _ticketsFinderMock.Setup(r => r.FindAllWithStatus(0))
@@ -47,17 +48,31 @@ namespace XunitTests.Controllers
             var result = (ViewResult)_controller.Index();
             
             // Assert
-            result.Model.Should().BeEquivalentTo(tickets);
+            var expectedViewModels = new[]
+            {
+                new TicketListViewModel
+                {
+                    Id = ticket1.Id,
+                    Title = ticket1.Title
+                },
+                new TicketListViewModel
+                {
+                    Id = ticket2.Id,
+                    Title = ticket2.Title
+                }
+            };
+            result.Model.Should().BeEquivalentTo(expectedViewModels);
         }
         [Test]
         public void Completed_returns_completed_tickets_with_the_status_1()
         {
             // Arrange
+            var ticket1 = _fixture.Create<Ticket>();
+            var ticket2 = _fixture.Create<Ticket>();
             var tickets = new[]
             {
-                _fixture.Create<Ticket>(),
-                _fixture.Create<Ticket>(),
-                _fixture.Create<Ticket>(),
+                ticket1,
+                ticket2,
             };
             
             _ticketsFinderMock.Setup(r => r.FindAllWithStatus(1))
@@ -67,7 +82,20 @@ namespace XunitTests.Controllers
             var result = (ViewResult)_controller.Completed();
             
             // Assert
-            result.Model.Should().BeEquivalentTo(tickets);
+            var expectedViewModels = new[]
+            {
+                new TicketListViewModel
+                {
+                    Id = ticket1.Id,
+                    Title = ticket1.Title
+                },
+                new TicketListViewModel
+                {
+                    Id = ticket2.Id,
+                    Title = ticket2.Title
+                }
+            };
+            result.Model.Should().BeEquivalentTo(expectedViewModels);
         }
 
         [Test]
