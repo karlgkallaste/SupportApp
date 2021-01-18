@@ -27,6 +27,16 @@
                     </ul>
                 </div>
             </div>
+                    <div class="col-md-4">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <a class="btn btn-danger" asp-area="" asp-controller="Account" asp-action="Logout">Log out</a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-success" asp-area="" asp-controller="Account" asp-action="Login">Log in</a>
+                        }
+                    </div>
         </nav>
     </header>
     <div class="container">

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,9 +33,11 @@ namespace SupportApp
             services.AddDbContext<SupportAppContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
             services.AddScoped<ISupportAppContext, SupportAppContext>();
-            
+            services.AddControllersWithViews(o => o.Filters.Add(new AuthorizeFilter()));
             services.AddScoped<ITicketsFinder, TicketsFinder>();
             services.AddScoped<ITicketsModifier, TicketsModifier>();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,6 +58,7 @@ namespace SupportApp
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
