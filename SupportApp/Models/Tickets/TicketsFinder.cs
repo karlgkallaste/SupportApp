@@ -7,7 +7,7 @@ namespace SupportApp.Models.Tickets
     public interface ITicketsFinder
     {
         Ticket Find(int id);
-        IReadOnlyCollection<Ticket> FindAllWithStatus(int status);
+        IReadOnlyCollection<Ticket> FindAllWithStatus(bool completed);
     }
     
     public class TicketsFinder : ITicketsFinder
@@ -24,9 +24,9 @@ namespace SupportApp.Models.Tickets
             return _context.FindById<Ticket>(id);
         }
 
-        public IReadOnlyCollection<Ticket> FindAllWithStatus(int status)
+        public IReadOnlyCollection<Ticket> FindAllWithStatus(bool completed)
         {
-            return _context.Queryable<Ticket>().Where(t => t.Status == status).OrderBy(t=>t.CreatedAt).ToArray();
+            return _context.Queryable<Ticket>().Where(t => t.IsCompleted == completed).OrderBy(t=>t.CreatedAt).ToArray();
         }
     }
 }

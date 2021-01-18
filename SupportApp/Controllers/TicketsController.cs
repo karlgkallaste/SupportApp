@@ -22,7 +22,7 @@ namespace SupportApp.Controllers
         // GET: Tickets
         public IActionResult Index()
         {
-            var incompleteTickets = _ticketsFinder.FindAllWithStatus(0);
+            var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
             var viewModels = incompleteTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
@@ -34,7 +34,7 @@ namespace SupportApp.Controllers
         // GET: Completed Tickets
         public IActionResult Completed()
         {
-            var completeTickets = _ticketsFinder.FindAllWithStatus(1);
+            var completeTickets = _ticketsFinder.FindAllWithStatus(true);
             var viewModels = completeTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
@@ -60,7 +60,7 @@ namespace SupportApp.Controllers
                 Description = ticket.Description,
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
-                Status = ticket.Status
+                IsCompleted = ticket.IsCompleted
             };
 
             return View(viewModel);
@@ -77,21 +77,20 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")]
-            Ticket ticket)
+        public IActionResult Create(CreateTicketModel model)
         {
             if (ModelState.IsValid)
             {
-                _ticketsModifier.Add(ticket);
+                _ticketsModifier.Add(model.ToDomainObject());
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(ticket);
+            return View(model);
         }
 
         // GET: Tickets/Edit/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Edit(int id)
+        public IActionResult Edit(int id)
         {
             var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
@@ -103,8 +102,7 @@ namespace SupportApp.Controllers
                 Id = ticket.Id,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                CompletedAt = ticket.CompletedAt,
-                Status = ticket.Status
+                IsCompleted = ticket.IsCompleted
             };
 
             return View(viewModel);
@@ -115,16 +113,11 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,Author,CreatedAt,CompletedAt,Status")]
-            Ticket model)
+        public IActionResult Edit(TicketEditViewModel model)
         {
-            if (id != model.Id)
-            {
-                return NotFound();
-            }
             if (ModelState.IsValid)
             {
-                var ticket = _ticketsFinder.Find(id);
+                var ticket = _ticketsFinder.Find(model.Id);
                 if (ticket == null)
                 {
                     return NotFound();
@@ -132,20 +125,24 @@ namespace SupportApp.Controllers
 
                 ticket.Title = model.Title;
                 ticket.Description = model.Description;
-                ticket.Author = model.Author;
-                ticket.CompletedAt = model.CompletedAt;
-                ticket.Status = model.Status;
+                if (model.IsCompleted && !ticket.IsCompleted)
+                {
+                    ticket.MarkDone();
+                }
+                else if(!model.IsCompleted && ticket.IsCompleted)
+                {
+                    ticket.MarkUndone();
+                }
                 
-                _ticketsModifier.EditTicket(ticket);
+                _ticketsModifier.UpdateTicket(ticket);
                 return RedirectToAction(nameof(Index));
             }
-
-            return View(in);
+            return View(model);
         }
 
         // GET: Tickets/Delete/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
             var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
@@ -169,7 +166,8 @@ namespace SupportApp.Controllers
         public IActionResult MarkDone(int id)
         {
             var ticket = _ticketsFinder.Find(id);
-            _ticketsModifier.MarkDone(ticket);
+            ticket.MarkDone();
+            _ticketsModifier.UpdateTicket(ticket);
             return RedirectToAction(nameof(Index));
         }
     }

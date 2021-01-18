@@ -13,38 +13,36 @@ namespace XunitTests.Models.Tickets
     public class TicketsFinderTests
     {
         [Test]
-        public void FindAllByStatus_Returns_All_Tickets_With_Given_Status()
+        public void FindAllByStatus_Returns_All_Tickets_With_Given_Status([Values]bool completed)
         {
             var fixture = new Fixture();
             var contextMock = new Mock<ISupportAppContext>(); 
             var sut = new TicketsFinder(contextMock.Object);
             
-            var status = 5678;
             var expectedTicket1 = fixture.Create<Ticket>();
-            expectedTicket1.Status = status;
+            expectedTicket1.MarkDone();
             expectedTicket1.CreatedAt =  DateTime.Now.AddSeconds(-2);
             var expectedTicket2 = fixture.Create<Ticket>();
-            expectedTicket2.Status = status;
+            expectedTicket2.MarkDone();
             expectedTicket2.CreatedAt = DateTime.Now.AddSeconds(-5);
             var expectedTicket3 = fixture.Create<Ticket>();
-            expectedTicket3.Status = status;
+            expectedTicket3.MarkDone();
             expectedTicket3.CreatedAt = DateTime.Now.AddSeconds(-9);
-            
+            var notExpectedTicket = fixture.Create<Ticket>();
+            notExpectedTicket.MarkUndone();
             
             var tickets = new[]
             {
-                fixture.Create<Ticket>(),
                 expectedTicket2,
                 expectedTicket3,
-                fixture.Create<Ticket>(),
-                fixture.Create<Ticket>(),
-                expectedTicket1
+                notExpectedTicket,
+                expectedTicket1,
             };
             contextMock.Setup(c => c.Queryable<Ticket>())
                 .Returns(tickets.AsQueryable());
             
             //act
-            var result = sut.FindAllWithStatus(status);
+            var result = sut.FindAllWithStatus(completed);
             
             //assert
             result.Should().BeEquivalentTo(new []{expectedTicket3, expectedTicket2, expectedTicket1}, 

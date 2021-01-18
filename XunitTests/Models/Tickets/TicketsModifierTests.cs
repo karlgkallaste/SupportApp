@@ -97,7 +97,7 @@ namespace XunitTests.Models.Tickets
             var newTicket = fixture.Create<Ticket>();
             
             //act
-            var result = sut.EditTicket(newTicket);
+            var result = sut.UpdateTicket(newTicket);
             
             //assert
             result.Should().Be(newTicket);
@@ -145,31 +145,5 @@ namespace XunitTests.Models.Tickets
                 contextMock.Verify(c=>c.SaveChanges());
             
         }
-
-        [Test]
-        public void MarkDone_Changes_Ticket_Status_To_1()
-        {
-            var fixture = new Fixture();
-            var contextMock = new Mock<ISupportAppContext>();
-            var ticketSetMock = new Mock<DbSet<Ticket>>();
-            contextMock.Setup(c => c.Set<Ticket>())
-                .Returns(ticketSetMock.Object);
-            
-            var sut = new TicketsModifier(contextMock.Object);
-            
-            
-            var newTicket = fixture.Create<Ticket>();
-            newTicket.Status = 0;
-            
-            //act
-            var result = sut.MarkDone(newTicket);
-            
-            //assert
-            result.Status.Should().Be(1);
-            ticketSetMock.Verify(c=>c.Update(newTicket), Times.Once);
-            contextMock.Verify(c=>c.SaveChanges());
-            
-        }
-
     }
 }
