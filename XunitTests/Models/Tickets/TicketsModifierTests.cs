@@ -105,45 +105,5 @@ namespace XunitTests.Models.Tickets
             contextMock.Verify(c=>c.SaveChanges());
             
         }
-
-        [Test]
-        public void RemoveAllBy_Removes_All_Tickets_By_Author()
-        {
-            
-                var fixture = new Fixture();
-                var contextMock = new Mock<ISupportAppContext>();
-            
-                var ticketSetMock = new Mock<DbSet<Ticket>>();
-                contextMock.Setup(c => c.Set<Ticket>())
-                    .Returns(ticketSetMock.Object);
-            
-                var sut = new TicketsModifier(contextMock.Object);
-            
-                var author = "KGK";
-                var ticket1 = fixture.Create<Ticket>();
-                ticket1.Author = author;
-                var ticket2 = fixture.Create<Ticket>();
-                ticket2.Author = author;
-            
-                var tickets = new[]
-                {
-                    fixture.Create<Ticket>(),
-                    ticket1,
-                    fixture.Create<Ticket>(),
-                    fixture.Create<Ticket>(),
-                    ticket2
-                };
-                contextMock.Setup(c => c.Queryable<Ticket>())
-                    .Returns(tickets.AsQueryable());
-            
-                //act
-                sut.RemoveAllByAuthor(author);
-            
-                //assert
-                ticketSetMock.Verify(c=>c.RemoveRange(
-                    It.Is<Ticket[]>(a => a.AssertIsEquivalent(new []{ticket1, ticket2}))));
-                contextMock.Verify(c=>c.SaveChanges());
-            
-        }
     }
 }

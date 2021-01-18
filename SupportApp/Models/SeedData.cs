@@ -24,37 +24,14 @@ namespace SupportApp.Models
                 }
 
                 context.Ticket.AddRange(
-                    new Ticket
-                    {
-                        Title = "Login issue",
-                        Description = "When i click on login nothing happens.",
-                        Author = "KGK",
-                        CreatedAt = DateTime.Parse("2020-3-11"),
-                    },
+                    new Ticket("When i click on register nothing happens.","Register issue","KGK",DateTime.Parse("2020-3-11")),
 
-                    new Ticket
-                    {
-                        Title = "Problem with my payment",
-                        Description = "The money was deducted from my bank account but my site balance is still the same.",
-                        Author = "Karl",
-                        CreatedAt = DateTime.Parse("2020-2-1"),
-                    },
 
-                    new Ticket
-                    {
-                        Title = "Forgot my login info",
-                        Description = "I don't remeber my login info and i don't have access to the email i used.",
-                        Author = "Gus",
-                        CreatedAt = DateTime.Parse("2020-1-22"),
-                    },
+                    new Ticket("When i click on createnew i get a error.","Createnew issue","KGK",DateTime.Parse("2020-1-11")),
 
-                    new Ticket
-                    {
-                        Title = "Account got hacked",
-                        Description = "Someone has changed my passowrd.",
-                        Author = "Carl",
-                        CreatedAt = DateTime.Parse("2019-5-31"),
-                    }
+                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-1-21")),
+
+                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-4-1"))
                 );
                 context.SaveChanges();
             }

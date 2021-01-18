@@ -215,21 +215,6 @@ namespace XunitTests.Controllers
             // Assert
             result.Should().BeOfType<NotFoundResult>();
         }
-        [Test]
-        public void Edit_Ticket_Info_When_Id_Exists()
-        {
-            // Arrange
-            var ticket1 = _fixture.Create<Ticket>();
-
-            _ticketsFinderMock.Setup(r => r.Find(ticket1.Id))
-                .Returns(ticket1);
-            
-            // Act
-            var result = (RedirectToActionResult)_controller.Edit(ticket1.Id); 
-            
-            // Assert
-            result.ActionName.Should().Be(nameof(TicketsController.Edit));      
-        }
 
         [Test]
         public void Edit_Marks_Ticket_As_Done()

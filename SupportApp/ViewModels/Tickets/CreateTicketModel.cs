@@ -15,15 +15,13 @@ namespace SupportApp.ViewModels.Tickets
         [Required]
         [MaxLength(30)]
         public string Author { get; set; }
+        public DateTime CreatedAt { get; set; }
 
         public Ticket ToDomainObject()
         {
-            var ticket = new Ticket
-            {
-                Author = Author,
-                Title = Title,
-                Description = Description
-            };
+            var ticket = new Ticket(Description, Title, Author, CreatedAt);
+            CreatedAt = DateTime.Now;
+            
             return ticket;
         }
     }

@@ -19,16 +19,13 @@ namespace XunitTests.Models.Tickets
             var contextMock = new Mock<ISupportAppContext>(); 
             var sut = new TicketsFinder(contextMock.Object);
             
-            var expectedTicket1 = fixture.Create<Ticket>();
+            var expectedTicket1 = new Ticket("test1","title1","author1", DateTime.Now.AddSeconds(2));
             expectedTicket1.MarkDone();
-            expectedTicket1.CreatedAt =  DateTime.Now.AddSeconds(-2);
-            var expectedTicket2 = fixture.Create<Ticket>();
+            var expectedTicket2 = new Ticket("test2","title2","author2", DateTime.Now.AddSeconds(3));
             expectedTicket2.MarkDone();
-            expectedTicket2.CreatedAt = DateTime.Now.AddSeconds(-5);
-            var expectedTicket3 = fixture.Create<Ticket>();
+            var expectedTicket3 = new Ticket("test3","title3","author3", DateTime.Now.AddSeconds(4));
             expectedTicket3.MarkDone();
-            expectedTicket3.CreatedAt = DateTime.Now.AddSeconds(-9);
-            var notExpectedTicket = fixture.Create<Ticket>();
+            var notExpectedTicket = new Ticket("test4","title4","author4", DateTime.Now.AddSeconds(43));
             notExpectedTicket.MarkUndone();
             
             var tickets = new[]
@@ -42,10 +39,10 @@ namespace XunitTests.Models.Tickets
                 .Returns(tickets.AsQueryable());
             
             //act
-            var result = sut.FindAllWithStatus(completed);
+            var result = sut.FindAllWithStatus(true);
             
             //assert
-            result.Should().BeEquivalentTo(new []{expectedTicket3, expectedTicket2, expectedTicket1}, 
+            result.Should().BeEquivalentTo(new []{expectedTicket1, expectedTicket2, expectedTicket3}, 
                 conf => conf.WithStrictOrdering() );
 
         }

@@ -58,6 +58,8 @@ namespace SupportApp.Controllers
                 Id = ticket.Id,
                 Title = ticket.Title,
                 Description = ticket.Description,
+                Author = ticket.Author,
+                Deadline = ticket.Deadline,
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
                 IsCompleted = ticket.IsCompleted
@@ -79,13 +81,10 @@ namespace SupportApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateTicketModel model)
         {
-            if (ModelState.IsValid)
-            {
-                _ticketsModifier.Add(model.ToDomainObject());
-                return RedirectToAction(nameof(Index));
-            }
+            if (!ModelState.IsValid) return View(model);
+            _ticketsModifier.Add(model.ToDomainObject());
+            return RedirectToAction(nameof(Index));
 
-            return View(model);
         }
 
         // GET: Tickets/Edit/5
@@ -122,9 +121,8 @@ namespace SupportApp.Controllers
                 {
                     return NotFound();
                 }
-
-                ticket.Title = model.Title;
-                ticket.Description = model.Description;
+                
+                ticket.EditTicket(model.Description, model.Title);
                 if (model.IsCompleted && !ticket.IsCompleted)
                 {
                     ticket.MarkDone();
@@ -154,7 +152,7 @@ namespace SupportApp.Controllers
         }
 
         // POST: Tickets/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost("{id}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
