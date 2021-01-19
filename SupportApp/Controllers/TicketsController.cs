@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SupportApp.Models.Tickets;
 using SupportApp.ViewModels.Tickets;
@@ -18,8 +19,8 @@ namespace SupportApp.Controllers
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
         }
-
         // GET: Tickets
+        [Authorize]
         public IActionResult Index()
         {
             var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
@@ -32,6 +33,7 @@ namespace SupportApp.Controllers
         }
 
         // GET: Completed Tickets
+        [Authorize]
         public IActionResult Completed()
         {
             var completeTickets = _ticketsFinder.FindAllWithStatus(true);
@@ -44,6 +46,7 @@ namespace SupportApp.Controllers
         }
 
         // GET: Tickets/Details/5
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult Details(int id)
         {
@@ -69,6 +72,7 @@ namespace SupportApp.Controllers
         }
 
         // GET: Tickets/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -79,6 +83,7 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public IActionResult Create(CreateTicketModel model)
         {
             if (!ModelState.IsValid) return View(model);
@@ -89,6 +94,7 @@ namespace SupportApp.Controllers
 
         // GET: Tickets/Edit/5
         [HttpGet("{id}")]
+        [Authorize]
         public IActionResult Edit(int id)
         {
             var ticket = _ticketsFinder.Find(id);
@@ -112,6 +118,7 @@ namespace SupportApp.Controllers
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("{id}")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public IActionResult Edit(TicketEditViewModel model)
         {
             if (ModelState.IsValid)
@@ -140,6 +147,7 @@ namespace SupportApp.Controllers
 
         // GET: Tickets/Delete/5
         [HttpGet("{id}")]
+        [Authorize]
         public IActionResult Delete(int id)
         {
             var ticket = _ticketsFinder.Find(id);
@@ -154,6 +162,7 @@ namespace SupportApp.Controllers
         // POST: Tickets/Delete/5
         [HttpPost("{id}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public IActionResult DeleteConfirmed(int id)
         {
             _ticketsModifier.RemoveTicket(id);
@@ -161,6 +170,7 @@ namespace SupportApp.Controllers
         }
         
         [HttpPost("{id}")]
+        [Authorize]
         public IActionResult MarkDone(int id)
         {
             var ticket = _ticketsFinder.Find(id);

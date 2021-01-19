@@ -13,17 +13,15 @@
 </head>
 
 <div class="text-center mt-5">
-    <h1 class="display-4">Support</h1>
+    <h1 class="display-4">Support App</h1>
+    <h3>Please log in or create an account</h3>
     <div class="container mt-5">
         <div class="row">
             <div class="col-sm">
-                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Index">Unsolved Tickets</a>
+                <a class="btn btn-success" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
             </div>
             <div class="col-sm">
-                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Create">Create new</a>
-            </div>
-            <div class="col-sm">
-                <a type="button" class="btn btn-warning" asp-area="" asp-controller="Tickets" asp-action="Completed">Solved Tickets</a>
+                <a class="btn btn-success" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
             </div>
         </div>
     </div>

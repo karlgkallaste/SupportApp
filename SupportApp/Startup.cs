@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportApp.Data;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Areas.Identity.Data;
 using SupportApp.Models.Tickets;
 
 namespace SupportApp
@@ -27,10 +29,16 @@ namespace SupportApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddRazorPages();
 
             services.AddDbContext<SupportAppContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
             services.AddScoped<ISupportAppContext, SupportAppContext>();
+            services.AddDbContext<SupportAppUserContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
+
+            services.AddIdentity<SupportAppUser, SupportAppRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<SupportAppUserContext>().AddDefaultUI().AddDefaultTokenProviders();
             
             services.AddScoped<ITicketsFinder, TicketsFinder>();
             services.AddScoped<ITicketsModifier, TicketsModifier>();
@@ -54,6 +62,7 @@ namespace SupportApp
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -61,6 +70,7 @@ namespace SupportApp
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapRazorPages();
             });
         }
     }
