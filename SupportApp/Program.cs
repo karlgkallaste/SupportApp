@@ -20,7 +20,7 @@ namespace SupportApp
 
                 try
                 {
-                    SeedData.Initialize(services).GetAwaiter().GetResult();
+                    SeedData.Initialize(services);
                 }
                 catch (Exception ex)
                 {
