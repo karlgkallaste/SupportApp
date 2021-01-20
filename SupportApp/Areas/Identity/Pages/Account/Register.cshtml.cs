@@ -24,19 +24,23 @@ namespace SupportApp.Areas.Identity.Pages.Account
         private readonly ISupportAppUserManager _userManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly RoleManager<SupportAppRole> _roleManager;
+        private readonly ISupportAppRoleManager _roleManager;
+        private readonly ISupportAppUrlHelper _urlHelper;
 
         public RegisterModel(
             ISupportAppUserManager userManager,
             ISupportAppSignInManager signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender, RoleManager<SupportAppRole> roleManager)
+            IEmailSender emailSender,
+            ISupportAppRoleManager roleManager,
+            ISupportAppUrlHelper urlHelper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
             _roleManager = roleManager;
+            _urlHelper = urlHelper;
         }
 
         [BindProperty]
@@ -86,7 +90,7 @@ namespace SupportApp.Areas.Identity.Pages.Account
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
+                    var callbackUrl = _urlHelper.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
                         values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
