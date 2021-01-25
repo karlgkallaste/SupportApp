@@ -1,4 +1,6 @@
-﻿@model SupportApp.ViewModels.Tickets.CreateTicketModel
+﻿@using SupportApp.Models.Categories
+@using SupportApp.Migrations
+@model SupportApp.ViewModels.Tickets.CreateTicketModel
 
 @{
     ViewData["Title"] = "Create";
@@ -27,6 +29,8 @@
                 <input asp-for="Author" class="form-control" />
                 <span asp-validation-for="Author" class="text-danger"></span>
             </div>
+            <select asp-for="Category" asp-items="@Model.Categories"></select>
+            <span asp-validation-for="Category" class="text-danger"></span>
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
@@ -37,7 +41,6 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
-
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

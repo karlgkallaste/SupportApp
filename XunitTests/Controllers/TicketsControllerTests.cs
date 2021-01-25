@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Linq;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,9 @@ using NUnit.Framework;
 using SupportApp.Controllers;
 using SupportApp.Data;
 using SupportApp.Models;
+using SupportApp.Models.Categories;
 using SupportApp.Models.Tickets;
+using SupportApp.ViewModels.Categories;
 using SupportApp.ViewModels.Tickets;
 
 namespace XunitTests.Controllers
@@ -20,6 +23,7 @@ namespace XunitTests.Controllers
         private Fixture _fixture;
         private Mock<ITicketsFinder> _ticketsFinderMock;
         private Mock<ITicketsModifier> _ticketsModifierMock;
+        private Mock<ICategoryFinder> _categoryFinderMock;
 
         [SetUp]
         public void Setup()
@@ -27,7 +31,8 @@ namespace XunitTests.Controllers
             _fixture = new Fixture();
             _ticketsFinderMock = new Mock<ITicketsFinder>();
             _ticketsModifierMock = new Mock<ITicketsModifier>();
-            _controller = new TicketsController(_ticketsFinderMock.Object, _ticketsModifierMock.Object);
+            _categoryFinderMock = new Mock<ICategoryFinder>();
+            _controller = new TicketsController(_ticketsFinderMock.Object, _ticketsModifierMock.Object, _categoryFinderMock.Object);
         }
         
         [Test]
@@ -35,7 +40,9 @@ namespace XunitTests.Controllers
         {
             // Arrange
             var ticket1 = _fixture.Create<Ticket>();
+            ticket1.SetProperty(t => t.Category, _fixture.Create<Category>());
             var ticket2 = _fixture.Create<Ticket>();
+            ticket2.SetProperty(t => t.Category, _fixture.Create<Category>());
             var tickets = new[]
             {
                 ticket1,
@@ -54,22 +61,26 @@ namespace XunitTests.Controllers
                 new TicketListViewModel
                 {
                     Id = ticket1.Id,
-                    Title = ticket1.Title
+                    Title = ticket1.Title,
+                    Category = ticket1.Category.Name
                 },
                 new TicketListViewModel
                 {
                     Id = ticket2.Id,
-                    Title = ticket2.Title
+                    Title = ticket2.Title,
+                    Category = ticket2.Category.Name
                 }
             };
             result.Model.Should().BeEquivalentTo(expectedViewModels);
         }
         [Test]
-        public void Completed_returns_completed_tickets_with_the_status_1()
+        public void Index_returns_Complete_tickets_that_are_ordered_by_created_at()
         {
             // Arrange
             var ticket1 = _fixture.Create<Ticket>();
+            ticket1.SetProperty(t => t.Category, _fixture.Create<Category>());
             var ticket2 = _fixture.Create<Ticket>();
+            ticket2.SetProperty(t => t.Category, _fixture.Create<Category>());
             var tickets = new[]
             {
                 ticket1,
@@ -88,12 +99,14 @@ namespace XunitTests.Controllers
                 new TicketListViewModel
                 {
                     Id = ticket1.Id,
-                    Title = ticket1.Title
+                    Title = ticket1.Title,
+                    Category = ticket1.Category.Name,
                 },
                 new TicketListViewModel
                 {
                     Id = ticket2.Id,
-                    Title = ticket2.Title
+                    Title = ticket2.Title,
+                    Category = ticket2.Category.Name
                 }
             };
             result.Model.Should().BeEquivalentTo(expectedViewModels);
@@ -121,6 +134,7 @@ namespace XunitTests.Controllers
             // Arrange
             var ticketId = 12345;
             var ticket = _fixture.Create<Ticket>();
+            ticket.SetProperty(t => t.Category, _fixture.Create<Category>());
             
             _ticketsFinderMock.Setup(r => r.Find(ticketId))
                 .Returns(ticket);
@@ -129,7 +143,14 @@ namespace XunitTests.Controllers
             var result = (ViewResult)_controller.Details(ticketId);
             
             // Assert
-            result.Model.Should().BeEquivalentTo(ticket);
+            var viewModel = (TicketDetailsViewModel)result.Model;
+            viewModel.Id.Should().Be(ticket.Id);
+            viewModel.Title.Should().Be(ticket.Title);
+            viewModel.CreatedAt.Should().Be(ticket.CreatedAt);
+            viewModel.IsCompleted.Should().Be(ticket.IsCompleted);
+            viewModel.CompletedAt.Should().Be(ticket.CompletedAt);
+            viewModel.Description.Should().Be(ticket.Description);
+            viewModel.Category.Should().Be(ticket.Category.Name);
         }
         [Test]
         public void Create_new_ticket_gets_added()
@@ -152,6 +173,7 @@ namespace XunitTests.Controllers
             createdTicket.Deadline.Should().Be(createdTicket.CreatedAt.AddDays(2));
             createdTicket.IsCompleted.Should().BeFalse();
             createdTicket.CompletedAt.Should().BeNull();
+            createdTicket.CategoryId.Should().Be(model.Category);
             
             result.ActionName.Should().Be(nameof(TicketsController.Index));
         }

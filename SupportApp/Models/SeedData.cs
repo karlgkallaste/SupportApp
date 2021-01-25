@@ -24,14 +24,14 @@ namespace SupportApp.Models
                 }
 
                 context.Ticket.AddRange(
-                    new Ticket("When i click on register nothing happens.","Register issue","KGK",DateTime.Parse("2020-3-11")),
+                    new Ticket("When i click on register nothing happens.","Register issue","KGK",DateTime.Parse("2020-3-11"),2),
 
 
-                    new Ticket("When i click on createnew i get a error.","Createnew issue","KGK",DateTime.Parse("2020-1-11")),
+                    new Ticket("When i click on createnew i get a error.","Createnew issue","KGK",DateTime.Parse("2020-1-11"), 2),
 
-                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-1-21")),
+                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-1-21"), 1),
 
-                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-4-1"))
+                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-4-1"), 1)
                 );
                 context.SaveChanges();
             }

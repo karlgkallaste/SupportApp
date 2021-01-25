@@ -13,6 +13,7 @@ namespace SupportApp.ViewModels.Tickets
         public DateTime CreatedAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public bool IsCompleted { get; set; }
+        public string Category { get; set; }
             
     }
 }

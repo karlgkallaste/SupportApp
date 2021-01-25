@@ -19,13 +19,13 @@ namespace XunitTests.Models.Tickets
             var contextMock = new Mock<ISupportAppContext>(); 
             var sut = new TicketsFinder(contextMock.Object);
             
-            var expectedTicket1 = new Ticket("test1","title1","author1", DateTime.Now.AddSeconds(2));
+            var expectedTicket1 = new Ticket("test1","title1","author1", DateTime.Now.AddSeconds(2), 1);
             expectedTicket1.MarkDone();
-            var expectedTicket2 = new Ticket("test2","title2","author2", DateTime.Now.AddSeconds(3));
+            var expectedTicket2 = new Ticket("test2","title2","author2", DateTime.Now.AddSeconds(3), 1);
             expectedTicket2.MarkDone();
-            var expectedTicket3 = new Ticket("test3","title3","author3", DateTime.Now.AddSeconds(4));
+            var expectedTicket3 = new Ticket("test3","title3","author3", DateTime.Now.AddSeconds(4),1);
             expectedTicket3.MarkDone();
-            var notExpectedTicket = new Ticket("test4","title4","author4", DateTime.Now.AddSeconds(43));
+            var notExpectedTicket = new Ticket("test4","title4","author4", DateTime.Now.AddSeconds(43), 1);
             notExpectedTicket.MarkUndone();
             
             var tickets = new[]

@@ -8,6 +8,8 @@ namespace SupportApp.Models.Tickets
     {
         Ticket Find(int id);
         IReadOnlyCollection<Ticket> FindAllWithStatus(bool completed);
+        IReadOnlyCollection<Ticket> FindAllByAuthor(string author);
+        
     }
     
     public class TicketsFinder : ITicketsFinder
@@ -27,6 +29,11 @@ namespace SupportApp.Models.Tickets
         public IReadOnlyCollection<Ticket> FindAllWithStatus(bool completed)
         {
             return _context.Queryable<Ticket>().Where(t => t.IsCompleted == completed).OrderBy(t=>t.CreatedAt).ToArray();
+        }
+
+        public IReadOnlyCollection<Ticket> FindAllByAuthor(string author)
+        {
+            return _context.Queryable<Ticket>().Where(t => t.Author == author).ToArray();
         }
     }
 }

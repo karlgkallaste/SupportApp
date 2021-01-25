@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using SupportApp.Models;
+using SupportApp.Models.Categories;
 using SupportApp.Models.Tickets;
 
 namespace SupportApp.Data
@@ -22,6 +23,8 @@ namespace SupportApp.Data
         }
 
         public DbSet<Ticket> Ticket { get; private set; }
+        
+        public DbSet<Category> Categories { get; private set; }
         public IQueryable<T> Queryable<T>() where T : class
         {
             return Set<T>().AsQueryable();
@@ -34,6 +37,11 @@ namespace SupportApp.Data
         public T FindByAuthor<T>(string author) where T : class
         {
             return Find<T>(author);
+        }
+        
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseLazyLoadingProxies();
         }
     }
 }

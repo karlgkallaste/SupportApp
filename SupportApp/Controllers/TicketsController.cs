@@ -2,6 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using SupportApp.Models.Categories;
 using SupportApp.Models.Tickets;
 using SupportApp.ViewModels.Tickets;
 
@@ -12,11 +15,13 @@ namespace SupportApp.Controllers
     {
         private readonly ITicketsFinder _ticketsFinder;
         private readonly ITicketsModifier _ticketsModifier;
+        private readonly ICategoryFinder _categoryFinder;
 
-        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier)
+        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder)
         {
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
+            _categoryFinder = categoryFinder;
         }
 
         // GET: Tickets
@@ -26,19 +31,21 @@ namespace SupportApp.Controllers
             var viewModels = incompleteTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
-                Title = t.Title
+                Title = t.Title,
+                Category = t.Category.Name
             }).ToArray();
             return View(viewModels);
         }
 
         // GET: Completed Tickets
         public IActionResult Completed()
-        {
+        {   
             var completeTickets = _ticketsFinder.FindAllWithStatus(true);
             var viewModels = completeTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
-                Title = t.Title
+                Title = t.Title,
+                Category = t.Category.Name
             }).ToArray();
             return View(viewModels);
         }
@@ -62,16 +69,30 @@ namespace SupportApp.Controllers
                 Deadline = ticket.Deadline,
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
-                IsCompleted = ticket.IsCompleted
+                IsCompleted = ticket.IsCompleted,
+                Category = ticket.Category.Name
             };
 
             return View(viewModel);
         }
 
         // GET: Tickets/Create
+        
         public IActionResult Create()
         {
-            return View();
+            // Get Post entity from database
+            // Populate list of possible categories for post & add to model
+            var categories = _categoryFinder.FindAll();
+            var categoryOptions = categories.Select(c=> new SelectListItem {
+                Text = c.Name,
+                Value = c.Id.ToString()
+            });
+            // Add post & categories to ViewModel
+            // Populate the view's model
+            return View(new CreateTicketModel
+            {
+                Categories = categoryOptions
+            });
         }
 
         // POST: Tickets/Create
@@ -96,12 +117,19 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
+            var categories = _categoryFinder.FindAll();
+            var categoryOptions = categories.Select(c=> new SelectListItem {
+                Text = c.Name,
+                Value = c.Id.ToString()
+            }).ToArray();
             var viewModel = new TicketEditViewModel
             {
                 Id = ticket.Id,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                IsCompleted = ticket.IsCompleted
+                IsCompleted = ticket.IsCompleted,
+                CategoryId = ticket.CategoryId,
+                Categories = categoryOptions
             };
 
             return View(viewModel);
@@ -122,7 +150,8 @@ namespace SupportApp.Controllers
                     return NotFound();
                 }
                 
-                ticket.EditTicket(model.Description, model.Title);
+                ticket.EditTicket(model.Description, model.Title, model.CategoryId);
+                
                 if (model.IsCompleted && !ticket.IsCompleted)
                 {
                     ticket.MarkDone();
@@ -135,6 +164,12 @@ namespace SupportApp.Controllers
                 _ticketsModifier.UpdateTicket(ticket);
                 return RedirectToAction(nameof(Index));
             }
+            var categories = _categoryFinder.FindAll();
+            var categoryOptions = categories.Select(c=> new SelectListItem {
+                Text = c.Name,
+                Value = c.Id.ToString()
+            }).ToArray();
+            model.Categories = categoryOptions;
             return View(model);
         }
 
@@ -157,6 +192,15 @@ namespace SupportApp.Controllers
         public IActionResult DeleteConfirmed(int id)
         {
             _ticketsModifier.RemoveTicket(id);
+            return RedirectToAction(nameof(Index));
+        }
+        // POST: Tickets/RemoveByAuthor/Name
+        [ActionName("RemoveByAuthor")]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveByAuthor(string author)
+        {
+            _ticketsFinder.FindAllByAuthor(author);
+            _ticketsModifier.RemoveAllByAuthor(author);
             return RedirectToAction(nameof(Index));
         }
         

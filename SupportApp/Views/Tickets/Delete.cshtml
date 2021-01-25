@@ -54,4 +54,9 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
+    <br>
+            <form asp-action="RemoveByAuthor">
+                <input type="hidden" asp-for="Author" />
+                <input type="submit" value="Remove All By Author" class="btn btn-danger" />
+            </form>
 </div>

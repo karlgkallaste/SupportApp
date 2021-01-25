@@ -1,0 +1,41 @@
+@model IEnumerable<SupportApp.ViewModels.Categories.CategoryListViewModel>
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+<center>
+    <h2>List of existing categories</h2>
+</center>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Id)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+                        <th>
+                            <a asp-action="Create" class="btn btn-success">Create new</a>
+                        </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+                    <td>
+                        <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                    </td>
+        </tr>
+        }
+    </tbody>
+</table>
