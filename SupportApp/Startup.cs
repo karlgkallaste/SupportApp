@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using SupportApp.Data;
 using Microsoft.EntityFrameworkCore;
 using SupportApp.Models.Categories;
+using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
 
 namespace SupportApp
@@ -35,6 +36,8 @@ namespace SupportApp
             });
             services.AddScoped<ISupportAppContext, SupportAppContext>();
             
+            services.AddScoped<ICommentFinder, CommentFinder>();
+            services.AddScoped<ICommentModifier, CommentModifier>();
             services.AddScoped<ITicketsFinder, TicketsFinder>();
             services.AddScoped<ITicketsModifier, TicketsModifier>();
             services.AddScoped<ICategoryFinder, CategoryFinder>();

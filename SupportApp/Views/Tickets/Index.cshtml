@@ -9,6 +9,12 @@
 <p>
     <a asp-action="Create" class="btn btn-success">Create New</a>
 </p>
+<form asp-controller="Tickets" asp-action="Index">
+    <p>
+        <input type="text" placeholder="Sort by Title" name="SearchString" />
+        <input type="submit" class="btn btn-success" value="Filter" />
+    </p>
+</form>
 <table class="table">
     <thead>
         <tr>
@@ -25,8 +31,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
-        {
+    
+    @foreach (var item in Model)
+    {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.Id)
@@ -34,15 +41,19 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Title)
             </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Category)
-                        </td>
-        <td>
-            <a asp-action="Edit" asp-route-id="@item.Id" class="badge badge-warning">Edit</a>
-            <a asp-action="Details" asp-route-id="@item.Id" class="badge badge-primary">Details</a>
-            <a asp-action="Delete" asp-route-id="@item.Id" class="badge badge-danger">Delete</a>
-        </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Category)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id" class="badge badge-success">Edit</a>
+                <a asp-action="Details" asp-route-id="@item.Id" class="badge badge-primary">Details</a>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="badge badge-danger">Delete</a>
+                        @if(item.Deadline <= DateTime.Now )
+                        {
+                            <p class="badge badge-warning">Overdue!</p>
+                        }
+            </td>
         </tr>
-        }
+    }
     </tbody>
 </table>

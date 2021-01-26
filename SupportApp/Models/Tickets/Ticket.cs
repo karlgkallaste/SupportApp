@@ -9,6 +9,7 @@ namespace SupportApp.Models.Tickets
 {
     public class Ticket
     {
+        [Key] 
         public int Id { get; private set; }
         public string Title { get; private set; }
         public string Description { get; private set; }
@@ -38,7 +39,7 @@ namespace SupportApp.Models.Tickets
             IsCompleted = true;
         }
 
-        public void EditTicket(string description, string title,int categoryId)
+        public void EditTicket(string description, string title, int categoryId)
         {
             Description = description;
             Title = title;

@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupportApp.Models.Categories;
+using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
 using SupportApp.ViewModels.Tickets;
 
@@ -16,8 +19,12 @@ namespace SupportApp.Controllers
         private readonly ITicketsFinder _ticketsFinder;
         private readonly ITicketsModifier _ticketsModifier;
         private readonly ICategoryFinder _categoryFinder;
+        private readonly ICommentFinder _commentFinders;
+        private readonly ICommentModifier _commentModifier;
+        
 
-        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder)
+        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder
+            , ICommentFinder _commentFinder, ICommentModifier commentModifier)
         {
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
@@ -25,7 +32,7 @@ namespace SupportApp.Controllers
         }
 
         // GET: Tickets
-        public IActionResult Index()
+        public IActionResult Index(string searchString)
         {
             var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
             var viewModels = incompleteTickets.Select(t => new TicketListViewModel
@@ -34,6 +41,16 @@ namespace SupportApp.Controllers
                 Title = t.Title,
                 Category = t.Category.Name
             }).ToArray();
+            
+            if (!String.IsNullOrEmpty(searchString))
+            {
+                viewModels = incompleteTickets.Select(t => new TicketListViewModel
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Category = t.Category.Name
+                }).Where(t=>t.Title.Contains(searchString)).ToArray();
+            }
             return View(viewModels);
         }
 
@@ -49,7 +66,6 @@ namespace SupportApp.Controllers
             }).ToArray();
             return View(viewModels);
         }
-
         // GET: Tickets/Details/5
         [HttpGet("{id}")]
         public IActionResult Details(int id)
@@ -172,7 +188,6 @@ namespace SupportApp.Controllers
             model.Categories = categoryOptions;
             return View(model);
         }
-
         // GET: Tickets/Delete/5
         [HttpGet("{id}")]
         public IActionResult Delete(int id)

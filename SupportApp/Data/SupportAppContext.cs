@@ -2,7 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using SupportApp.Models;
 using SupportApp.Models.Categories;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using SupportApp.Migrations;
 using SupportApp.Models.Tickets;
+using SupportApp.Models.Comments;
 
 namespace SupportApp.Data
 {
@@ -25,6 +28,8 @@ namespace SupportApp.Data
         public DbSet<Ticket> Ticket { get; private set; }
         
         public DbSet<Category> Categories { get; private set; }
+        
+        public DbSet<Comment> Comments { get; private set; }
         public IQueryable<T> Queryable<T>() where T : class
         {
             return Set<T>().AsQueryable();
