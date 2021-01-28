@@ -44,4 +44,13 @@
     <UpToDateCheckInput Remove="Areas\Identity\Pages\_ViewStart.cshtml" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Migrations\SupportAppUser\20210126092012_Users.cs" />
+    <Compile Remove="Migrations\SupportAppUser\20210126092012_Users.Designer.cs" />
+    <Compile Remove="Migrations\20210127081205_Comments.cs" />
+    <Compile Remove="Migrations\20210127081205_Comments.Designer.cs" />
+    <Compile Remove="Migrations\20210126112307_ticketidforcomments.cs" />
+    <Compile Remove="Migrations\20210126112307_ticketidforcomments.Designer.cs" />
+  </ItemGroup>
+
 </Project>

@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using SupportApp.Models;
 using SupportApp.Models.Categories;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using SupportApp.Migrations;
 using SupportApp.Models.Tickets;
 using SupportApp.Models.Comments;
 
@@ -47,6 +46,12 @@ namespace SupportApp.Data
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseLazyLoadingProxies();
+        }
+        
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            SupportApp.Models.Tickets.Ticket.DbConfiguration.Configure(builder);
         }
     }
 }

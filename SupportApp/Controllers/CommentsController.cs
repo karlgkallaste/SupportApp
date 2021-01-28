@@ -13,39 +13,21 @@ namespace SupportApp.Controllers
         private readonly ICommentModifier _commentModifier;
         private readonly ICommentFinder _commentFinder;
         private readonly ITicketsFinder _ticketFinder;
+        private readonly ITicketsModifier _ticketsModifier;
 
-        public CommentController(ICommentModifier commentModifier, ICommentFinder commentFinder, ITicketsFinder ticketFinder)
+        public CommentController(ICommentModifier commentModifier, ICommentFinder commentFinder, ITicketsFinder ticketFinder, ITicketsModifier ticketsModifier)
         {
             _commentModifier = commentModifier;
             _commentFinder = commentFinder;
             _ticketFinder = ticketFinder;
-        }
-
-        // GET
-        //Tested
-        [HttpGet("")]
-        public IActionResult Index()
-        {
-            var comments = _commentFinder.FindAll();
-            var viewModels = comments.Select(t => new CommentListViewModel
-            {
-                Id = t.Id,
-                Content = t.Content
-            }).ToArray();
-            return View(viewModels);
+            _ticketsModifier = ticketsModifier;
         }
         
-        
-     /*   public IActionResult Create(int id)
+        public IActionResult Create()
         {
-            var comments = _ticketFinder.Find(id);
-            var viewModels = comments.Select(t => new CreateCommentModel
-            {
-                Content = t.Content
-            }).ToArray();
             return View();
         }
-        */
+        
         
         
         [HttpPost]
@@ -53,8 +35,10 @@ namespace SupportApp.Controllers
         public IActionResult Create(CreateCommentModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            _commentModifier.Add(model.ToDomainObject());
-            return RedirectToAction(nameof(Index));
+            var ticket = _ticketFinder.Find(model.TicketId);
+            ticket.AddComment(model.ToDomainObject());
+            _ticketsModifier.UpdateTicket(ticket);
+            return RedirectToAction("Details","Tickets", new {Id = model.TicketId});
 
         }
         [HttpGet("{id}")]
@@ -73,7 +57,7 @@ namespace SupportApp.Controllers
         public IActionResult DeleteConfirmed(int id)
         {
             _commentModifier.RemoveComment(id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index","Tickets");
         }
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
+using SupportApp.ViewModels.Comments;
 using SupportApp.ViewModels.Tickets;
 
 namespace SupportApp.Controllers
@@ -19,42 +20,65 @@ namespace SupportApp.Controllers
         private readonly ITicketsFinder _ticketsFinder;
         private readonly ITicketsModifier _ticketsModifier;
         private readonly ICategoryFinder _categoryFinder;
-        private readonly ICommentFinder _commentFinders;
-        private readonly ICommentModifier _commentModifier;
-        
 
-        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder
-            , ICommentFinder _commentFinder, ICommentModifier commentModifier)
+
+        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder)
         {
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
             _categoryFinder = categoryFinder;
         }
-
         // GET: Tickets
+        [Authorize]
         public IActionResult Index(string searchString)
         {
-            var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
-            var viewModels = incompleteTickets.Select(t => new TicketListViewModel
+            if (User.IsInRole("User"))
             {
-                Id = t.Id,
-                Title = t.Title,
-                Category = t.Category.Name
-            }).ToArray();
-            
-            if (!String.IsNullOrEmpty(searchString))
-            {
-                viewModels = incompleteTickets.Select(t => new TicketListViewModel
+                var userIncompleteTickets = _ticketsFinder.FindAllByAuthor(User.Identity.Name, false);
+                var userViewModels = userIncompleteTickets.Select(t => new TicketListViewModel
                 {
                     Id = t.Id,
                     Title = t.Title,
                     Category = t.Category.Name
-                }).Where(t=>t.Title.Contains(searchString)).ToArray();
+                }).ToArray();
+            
+                if (!String.IsNullOrEmpty(searchString))
+                {
+                    userViewModels = userIncompleteTickets.Select(t => new TicketListViewModel
+                    {
+                        Id = t.Id,
+                        Title = t.Title,
+                        Category = t.Category.Name
+                    }).Where(t=>t.Title.Contains(searchString)).ToArray();
+                }
+                return View(userViewModels);  
             }
-            return View(viewModels);
+            else
+            {
+             
+                var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
+                var viewModels = incompleteTickets.Select(t => new TicketListViewModel
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Category = t.Category.Name
+                }).ToArray();
+            
+                if (!String.IsNullOrEmpty(searchString))
+                {
+                    viewModels = incompleteTickets.Select(t => new TicketListViewModel
+                    {
+                        Id = t.Id,
+                        Title = t.Title,
+                        Category = t.Category.Name
+                    }).Where(t=>t.Title.Contains(searchString)).ToArray();
+                }
+                return View(viewModels);   
+            }
         }
 
         // GET: Completed Tickets
+        [Authorize]
         public IActionResult Completed()
         {   
             var completeTickets = _ticketsFinder.FindAllWithStatus(true);
@@ -66,6 +90,19 @@ namespace SupportApp.Controllers
             }).ToArray();
             return View(viewModels);
         }
+        [Authorize]
+        public IActionResult Overduetickets()
+        {   
+            var incompleteTickets = _ticketsFinder.FindAllByOverDueTickets(false);
+            var viewModels = incompleteTickets.Select(t => new OverDueTicketListViewModel
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Category = t.Category.Name
+            }).ToArray();
+            return View(viewModels);
+        }
+        [Authorize]
         // GET: Tickets/Details/5
         [HttpGet("{id}")]
         public IActionResult Details(int id)
@@ -75,7 +112,7 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
-
+            
             var viewModel = new TicketDetailsViewModel
             {
                 Id = ticket.Id,
@@ -86,14 +123,20 @@ namespace SupportApp.Controllers
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
                 IsCompleted = ticket.IsCompleted,
-                Category = ticket.Category.Name
+                Category = ticket.Category.Name,
+                Comments = ticket.GetComments().Select(c=>new CommentListViewModel
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                }).ToList()
+                
             };
 
             return View(viewModel);
         }
 
         // GET: Tickets/Create
-        
+        [Authorize]
         public IActionResult Create()
         {
             // Get Post entity from database
@@ -115,6 +158,7 @@ namespace SupportApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateTicketModel model)
         {
@@ -123,7 +167,7 @@ namespace SupportApp.Controllers
             return RedirectToAction(nameof(Index));
 
         }
-
+        [Authorize]
         // GET: Tickets/Edit/5
         [HttpGet("{id}")]
         public IActionResult Edit(int id)
@@ -155,6 +199,7 @@ namespace SupportApp.Controllers
         // To protect from overposting attacks, enable the specific properties you want to bind to, for 
         // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost("{id}")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(TicketEditViewModel model)
         {
@@ -189,6 +234,7 @@ namespace SupportApp.Controllers
             return View(model);
         }
         // GET: Tickets/Delete/5
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult Delete(int id)
         {
@@ -203,6 +249,7 @@ namespace SupportApp.Controllers
 
         // POST: Tickets/Delete/5
         [HttpPost("{id}"), ActionName("Delete")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
@@ -211,15 +258,16 @@ namespace SupportApp.Controllers
         }
         // POST: Tickets/RemoveByAuthor/Name
         [ActionName("RemoveByAuthor")]
+        [Authorize]
         [ValidateAntiForgeryToken]
         public IActionResult RemoveByAuthor(string author)
         {
-            _ticketsFinder.FindAllByAuthor(author);
+            _ticketsFinder.FindAllByAuthor(author, false);
             _ticketsModifier.RemoveAllByAuthor(author);
             return RedirectToAction(nameof(Index));
         }
-        
         [HttpPost("{id}")]
+        [Authorize]
         public IActionResult MarkDone(int id)
         {
             var ticket = _ticketsFinder.Find(id);

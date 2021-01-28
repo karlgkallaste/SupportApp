@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Areas.Identity.Data;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Tickets;
 
@@ -23,11 +26,9 @@ namespace SupportApp.ViewModels.Tickets
         public int Category { get; set; }
 
         public IEnumerable<SelectListItem> Categories { get; set; }
-        
-        
-        
 
-
+        
+        
         public Ticket ToDomainObject()
         {
             var ticket = new Ticket(Description, Title, Author, CreatedAt, Category);

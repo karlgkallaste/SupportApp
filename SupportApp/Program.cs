@@ -5,12 +5,13 @@ using Microsoft.Extensions.Logging;
 using SupportApp.Data;
 using SupportApp.Models;
 using System;
+using System.Threading.Tasks;
 
 namespace SupportApp
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
 
@@ -20,7 +21,7 @@ namespace SupportApp
 
                 try
                 {
-                    SeedData.Initialize(services);
+                    await SeedData.Initialize(services);
                 }
                 catch (Exception ex)
                 {

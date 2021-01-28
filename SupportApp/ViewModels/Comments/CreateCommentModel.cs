@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
+using SupportApp.Models.Tickets;
 
 namespace SupportApp.ViewModels.Comments
 {
@@ -9,6 +10,8 @@ namespace SupportApp.ViewModels.Comments
     {   
         [Required]
         public string Content { get; set; }
+
+        public int TicketId { get; set; }
 
         public Comment ToDomainObject()
         {

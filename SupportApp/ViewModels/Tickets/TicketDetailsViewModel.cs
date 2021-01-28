@@ -1,4 +1,8 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using SupportApp.Models.Comments;
+using SupportApp.ViewModels.Comments;
 
 namespace SupportApp.ViewModels.Tickets
 {
@@ -14,6 +18,8 @@ namespace SupportApp.ViewModels.Tickets
         public DateTime? CompletedAt { get; set; }
         public bool IsCompleted { get; set; }
         public string Category { get; set; }
-            
+        public string Content { get; set; }
+
+        public virtual List<CommentListViewModel> Comments { get; set; } = new List<CommentListViewModel>();
     }
 }

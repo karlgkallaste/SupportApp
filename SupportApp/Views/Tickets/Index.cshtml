@@ -1,7 +1,13 @@
-﻿@model IEnumerable<SupportApp.ViewModels.Tickets.TicketListViewModel>
+﻿@using System.Security.Cryptography
+@model IEnumerable<SupportApp.ViewModels.Tickets.TicketListViewModel>
 
 @{
     ViewData["Title"] = "Index";
+}
+@if (@User.IsInRole("Admin"))
+{
+    <h3>Logged in as admin</h3>
+    <hr>
 }
 
 <h1>Unsolved Tickets</h1>

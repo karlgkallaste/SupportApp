@@ -1,4 +1,7 @@
-﻿@model SupportApp.ViewModels.Tickets.TicketDetailsViewModel
+﻿@using SupportApp.Models.Comments
+@using SupportApp.Models.Tickets
+@using System.Collections
+@model SupportApp.ViewModels.Tickets.TicketDetailsViewModel
 
 @{
     ViewData["Title"] = "Details";
@@ -57,3 +60,25 @@
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+<hr>
+@using (Html.BeginForm("Create", "Comment", FormMethod.Post, null))
+    {
+                    <div class="form-group">
+                        <label class="control-label">Add a comment</label>
+                        <input hidden name="TicketId" value="@Model.Id">
+                        <input name="Content" class="form-control" />
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+        <div class="form-group">
+            <input type="submit" value="Create" class="btn btn-primary" />
+        </div>
+    }
+
+@foreach(var comment in Model.Comments){
+    <tr>
+    <dd class="col-sm-10">
+        @comment.Content
+        @Html.ActionLink("delete","Delete","Comment",new {Id = comment.Id})
+    </dd>
+    </tr>
+}

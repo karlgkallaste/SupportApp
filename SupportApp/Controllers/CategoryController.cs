@@ -1,4 +1,5 @@
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SupportApp.Models.Categories;
 using SupportApp.ViewModels.Categories;
@@ -19,6 +20,7 @@ namespace SupportApp.Controllers
 
         // GET
         //Tested
+        [Authorize(Roles = "Admin")]
         [HttpGet("")]
         public IActionResult Index()
         {
@@ -30,10 +32,13 @@ namespace SupportApp.Controllers
             }).ToArray();
             return View(viewModels);
         }
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
+        
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCategoryModel model)
@@ -43,6 +48,8 @@ namespace SupportApp.Controllers
             return RedirectToAction(nameof(Index));
 
         }
+        
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public IActionResult Delete(int id)
         {
@@ -54,6 +61,8 @@ namespace SupportApp.Controllers
 
             return View(category);
         }
+        
+        [Authorize(Roles = "Admin")]
         [HttpPost("{id}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)

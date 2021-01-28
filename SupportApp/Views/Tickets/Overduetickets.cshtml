@@ -1,0 +1,62 @@
+@using System.Security.Cryptography
+@model IEnumerable<SupportApp.ViewModels.Tickets.OverDueTicketListViewModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+@if (@User.IsInRole("Admin"))
+{
+    <h3>Logged in as admin</h3>
+    <hr>
+}
+
+<h1>Overdue tickets</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Create New</a>
+</p>
+<form asp-controller="Tickets" asp-action="Index">
+    <p>
+        <input type="text" placeholder="Sort by Title" name="SearchString" />
+        <input type="submit" class="btn btn-success" value="Filter" />
+    </p>
+</form>
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Id)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Category)
+        </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Deadline)
+                </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Category)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Deadline)
+                </td>
+        </tr>
+    }
+    </tbody>
+</table>
