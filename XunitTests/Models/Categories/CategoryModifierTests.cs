@@ -102,8 +102,7 @@ namespace XunitTests.Models.Categorys
             
             categorySetMock.Verify(c=>c.Remove(category));
             contextMock.Verify(c=>c.SaveChanges());
-            
-            
+
         }
     }
 }

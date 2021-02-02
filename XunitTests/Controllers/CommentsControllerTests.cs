@@ -58,14 +58,13 @@ namespace XunitTests.Controllers
         public void DeleteConfirmed_Removes_Comment_By_Id_And_Redirects_To_Tickets_Index()
         {
             // Arrange
-            var model = _fixture.Create<CreateCommentModel>();
-            model.TicketId = 1;
+            var ticketId = 34564;
 
             // Act
-            var result = (RedirectToActionResult)_controller.DeleteConfirmed(model.TicketId);
+            var result = (RedirectToActionResult)_controller.DeleteConfirmed(ticketId);
             
             // Assert
-            _commentModifierMock.Verify(r => r.RemoveComment(model.TicketId), Times.Once);
+            _commentModifierMock.Verify(r => r.RemoveComment(ticketId), Times.Once);
             result.ActionName.Should().Be(nameof(TicketsController.Index));
         }
     }

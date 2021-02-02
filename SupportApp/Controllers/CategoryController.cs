@@ -7,6 +7,7 @@ using SupportApp.ViewModels.Categories;
 namespace SupportApp.Controllers
 {
     [Route("[controller]/[action]")]
+    [Authorize(Roles = "Admin")]
     public class CategoryController : Controller
     {
         private readonly ICategoryModifier _categoryModifier;
@@ -20,7 +21,6 @@ namespace SupportApp.Controllers
 
         // GET
         //Tested
-        [Authorize(Roles = "Admin")]
         [HttpGet("")]
         public IActionResult Index()
         {
@@ -32,13 +32,11 @@ namespace SupportApp.Controllers
             }).ToArray();
             return View(viewModels);
         }
-        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
         
-        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(CreateCategoryModel model)
@@ -49,7 +47,6 @@ namespace SupportApp.Controllers
 
         }
         
-        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public IActionResult Delete(int id)
         {
@@ -62,7 +59,6 @@ namespace SupportApp.Controllers
             return View(category);
         }
         
-        [Authorize(Roles = "Admin")]
         [HttpPost("{id}"), ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)

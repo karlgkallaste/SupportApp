@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using SupportApp.Data;
 
@@ -10,7 +11,7 @@ namespace SupportApp.Models.Tickets
 
         Ticket UpdateTicket(Ticket ticket);
 
-        void RemoveAllByAuthor(string ticket);
+        void RemoveAllByAuthor(Guid author);
     }
     public class TicketsModifier : ITicketsModifier
     {
@@ -47,7 +48,7 @@ namespace SupportApp.Models.Tickets
             return ticket;
         }
 
-        public void RemoveAllByAuthor(string author)
+        public void RemoveAllByAuthor(Guid author)
         {
             var ticketSet = _context.Set<Ticket>();
             var tickets = _context.Queryable<Ticket>().Where(t => t.Author == author).ToArray();

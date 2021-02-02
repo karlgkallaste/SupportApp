@@ -10,7 +10,7 @@
     <hr>
 }
 
-<h1>Overdue tickets</h1>
+<h2>Overdue tickets</h2>
 
 <p>
     <a asp-action="Create" class="btn btn-success">Create New</a>
@@ -33,9 +33,12 @@
         <th>
             @Html.DisplayNameFor(model => model.Category)
         </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Deadline)
-                </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Deadline)
+        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Hourspast)
+                        </th>
         <th></th>
     </tr>
     </thead>
@@ -55,7 +58,10 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Deadline)
-                </td>
+            </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Hourspast)
+                            </td>
         </tr>
     }
     </tbody>

@@ -5,7 +5,12 @@
 }
 
 <h1>Solved Tickets</h1>
-
+<form asp-controller="Tickets" asp-action="Completed">
+    <p>
+        <input type="text" placeholder="Sort by Title" name="SearchString" />
+        <input type="submit" class="btn btn-success" value="Filter" />
+    </p>
+</form>
 <table class="table">
     <thead>
         <tr>

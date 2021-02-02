@@ -19,13 +19,13 @@ namespace XunitTests.Models.Tickets
             var contextMock = new Mock<ISupportAppContext>(); 
             var sut = new TicketsFinder(contextMock.Object);
             
-            var expectedTicket1 = new Ticket("test1","title1","author1", DateTime.Now.AddSeconds(2), 1);
+            var expectedTicket1 = fixture.Create<Ticket>();
             expectedTicket1.MarkDone();
-            var expectedTicket2 = new Ticket("test2","title2","author2", DateTime.Now.AddSeconds(3), 1);
+            var expectedTicket2 = fixture.Create<Ticket>();
             expectedTicket2.MarkDone();
-            var expectedTicket3 = new Ticket("test3","title3","author3", DateTime.Now.AddSeconds(4),1);
+            var expectedTicket3 = fixture.Create<Ticket>();
             expectedTicket3.MarkDone();
-            var notExpectedTicket = new Ticket("test4","title4","author4", DateTime.Now.AddSeconds(43), 1);
+            var notExpectedTicket = fixture.Create<Ticket>();
             notExpectedTicket.MarkUndone();
             
             var tickets = new[]
@@ -39,7 +39,7 @@ namespace XunitTests.Models.Tickets
                 .Returns(tickets.AsQueryable());
             
             //act
-            var result = sut.FindAllWithStatus(true);
+            var result = sut.FindAllWithStatus(true,"");
             
             //assert
             result.Should().BeEquivalentTo(new []{expectedTicket1, expectedTicket2, expectedTicket3}, 

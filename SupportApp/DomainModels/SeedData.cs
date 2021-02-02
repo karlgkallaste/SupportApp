@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using SupportApp.Areas.Identity.Data;
+using SupportApp.Migrations;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Tickets;
 
@@ -33,16 +34,16 @@ namespace SupportApp.Models
 
                 var categories = context.Categories.ToArray();
 
-                await context.Ticket.AddRangeAsync(
-                    new Ticket("When i click on register nothing happens.","Register issue","KGK",DateTime.Parse("2020-3-11"), categories[0].Id),
+              /*  await context.Ticket.AddRangeAsync(
+                    new Ticket("When i click on register nothing happens.","Register issue",new Guid("1"),DateTime.Parse("2020-3-11"), categories[0].Id),
 
 
-                    new Ticket("When i click on createnew i get a error.","Createnew issue","KGK",DateTime.Parse("2020-1-11"), categories[0].Id),
+                    new Ticket("When i click on createnew i get a error.","Createnew issue",new Guid("1"),DateTime.Parse("2020-1-11"), categories[0].Id),
 
-                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-1-21"), categories[1].Id),
+                    new Ticket("When i click on login nothing happens.","Login issue",new Guid("1"),DateTime.Parse("2020-1-21"), categories[1].Id),
 
-                    new Ticket("When i click on login nothing happens.","Login issue","KGK",DateTime.Parse("2020-4-1"), categories[1].Id)
-                );
+                    new Ticket("When i click on login nothing happens.","Login issue",new Guid(1),DateTime.Parse("2020-4-1"), categories[1].Id)
+                );*/
                 await context.SaveChangesAsync();
                 var roleManager = serviceProvider.GetService<RoleManager<SupportAppRole>>();
                 await roleManager.CreateAsync(new SupportAppRole() {Name = "User"});

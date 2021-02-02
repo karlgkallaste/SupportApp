@@ -39,8 +39,8 @@ namespace SupportApp.Controllers
             ticket.AddComment(model.ToDomainObject());
             _ticketsModifier.UpdateTicket(ticket);
             return RedirectToAction("Details","Tickets", new {Id = model.TicketId});
-
         }
+        
         [HttpGet("{id}")]
         public IActionResult Delete(int id)
         {

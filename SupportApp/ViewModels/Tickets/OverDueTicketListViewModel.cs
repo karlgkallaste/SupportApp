@@ -16,6 +16,7 @@ namespace SupportApp.ViewModels.Tickets
         public Category CategoryName { get; set; }
         
         public string Author { get; set; }
-        
+        [Display(Name = "Hours Past Deadline")]
+        public int Hourspast { get; set; }
     }
 }

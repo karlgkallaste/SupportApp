@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Areas.Identity.Data;
+using SupportApp.Extensions;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
@@ -22,86 +24,63 @@ namespace SupportApp.Controllers
         private readonly ICategoryFinder _categoryFinder;
 
 
-        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier, ICategoryFinder categoryFinder)
+        public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier,
+            ICategoryFinder categoryFinder)
         {
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
             _categoryFinder = categoryFinder;
         }
+
         // GET: Tickets
         [Authorize]
         public IActionResult Index(string searchString)
         {
-            if (User.IsInRole("User"))
-            {
-                var userIncompleteTickets = _ticketsFinder.FindAllByAuthor(User.Identity.Name, false);
-                var userViewModels = userIncompleteTickets.Select(t => new TicketListViewModel
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Category = t.Category.Name
-                }).ToArray();
+            var incompleteTickets = User.IsInRole("Admin") 
+                ? _ticketsFinder.FindAllWithStatus(false, searchString)
+                : _ticketsFinder.FindAllByAuthor(User.GetUserId(), false, searchString);
             
-                if (!String.IsNullOrEmpty(searchString))
-                {
-                    userViewModels = userIncompleteTickets.Select(t => new TicketListViewModel
-                    {
-                        Id = t.Id,
-                        Title = t.Title,
-                        Category = t.Category.Name
-                    }).Where(t=>t.Title.Contains(searchString)).ToArray();
-                }
-                return View(userViewModels);  
-            }
-            else
-            {
-             
-                var incompleteTickets = _ticketsFinder.FindAllWithStatus(false);
-                var viewModels = incompleteTickets.Select(t => new TicketListViewModel
-                {
-                    Id = t.Id,
-                    Title = t.Title,
-                    Category = t.Category.Name
-                }).ToArray();
-            
-                if (!String.IsNullOrEmpty(searchString))
-                {
-                    viewModels = incompleteTickets.Select(t => new TicketListViewModel
-                    {
-                        Id = t.Id,
-                        Title = t.Title,
-                        Category = t.Category.Name
-                    }).Where(t=>t.Title.Contains(searchString)).ToArray();
-                }
-                return View(viewModels);   
-            }
-        }
-
-        // GET: Completed Tickets
-        [Authorize]
-        public IActionResult Completed()
-        {   
-            var completeTickets = _ticketsFinder.FindAllWithStatus(true);
-            var viewModels = completeTickets.Select(t => new TicketListViewModel
+            var userViewModels = incompleteTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
                 Title = t.Title,
                 Category = t.Category.Name
             }).ToArray();
-            return View(viewModels);
+            return View(userViewModels);
         }
-        [Authorize]
-        public IActionResult Overduetickets()
-        {   
+
+        // GET: Completed Tickets
+        public IActionResult Completed(string searchString)
+        {
+            var completeTickets = User.IsInRole("Admin") 
+                ? _ticketsFinder.FindAllWithStatus(true, searchString)
+                : _ticketsFinder.FindAllByAuthor(User.GetUserId(), true, searchString);
+            
+            var userViewModels = completeTickets.Select(t => new TicketListViewModel
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Category = t.Category.Name
+            }).ToArray();
+            return View(userViewModels);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public IActionResult OverdueTickets()
+        {
             var incompleteTickets = _ticketsFinder.FindAllByOverDueTickets(false);
             var viewModels = incompleteTickets.Select(t => new OverDueTicketListViewModel
             {
                 Id = t.Id,
                 Title = t.Title,
-                Category = t.Category.Name
+                Category = t.Category.Name,
+                Deadline = t.Deadline,
+                Hourspast = (int) DateTime.Now.Subtract(t.Deadline).TotalHours
             }).ToArray();
             return View(viewModels);
         }
+
+
         [Authorize]
         // GET: Tickets/Details/5
         [HttpGet("{id}")]
@@ -112,24 +91,27 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
-            
+            if (ticket.Author != User.GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
             var viewModel = new TicketDetailsViewModel
             {
                 Id = ticket.Id,
                 Title = ticket.Title,
                 Description = ticket.Description,
-                Author = ticket.Author,
                 Deadline = ticket.Deadline,
+                Author = User.Identity.Name,
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
                 IsCompleted = ticket.IsCompleted,
                 Category = ticket.Category.Name,
-                Comments = ticket.GetComments().Select(c=>new CommentListViewModel
+                Comments = ticket.GetComments().Select(c => new CommentListViewModel
                 {
                     Id = c.Id,
                     Content = c.Content,
                 }).ToList()
-                
             };
 
             return View(viewModel);
@@ -142,7 +124,8 @@ namespace SupportApp.Controllers
             // Get Post entity from database
             // Populate list of possible categories for post & add to model
             var categories = _categoryFinder.FindAll();
-            var categoryOptions = categories.Select(c=> new SelectListItem {
+            var categoryOptions = categories.Select(c => new SelectListItem
+            {
                 Text = c.Name,
                 Value = c.Id.ToString()
             });
@@ -163,10 +146,10 @@ namespace SupportApp.Controllers
         public IActionResult Create(CreateTicketModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            _ticketsModifier.Add(model.ToDomainObject());
+            _ticketsModifier.Add(model.ToDomainObject(User.GetUserId()));
             return RedirectToAction(nameof(Index));
-
         }
+
         [Authorize]
         // GET: Tickets/Edit/5
         [HttpGet("{id}")]
@@ -177,8 +160,14 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
+            if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+            {
+                return Forbid();
+            }
+
             var categories = _categoryFinder.FindAll();
-            var categoryOptions = categories.Select(c=> new SelectListItem {
+            var categoryOptions = categories.Select(c => new SelectListItem
+            {
                 Text = c.Name,
                 Value = c.Id.ToString()
             }).ToArray();
@@ -210,29 +199,36 @@ namespace SupportApp.Controllers
                 {
                     return NotFound();
                 }
-                
+                if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+                {
+                    return Forbid();
+                }
+
                 ticket.EditTicket(model.Description, model.Title, model.CategoryId);
-                
+
                 if (model.IsCompleted && !ticket.IsCompleted)
                 {
                     ticket.MarkDone();
                 }
-                else if(!model.IsCompleted && ticket.IsCompleted)
+                else if (!model.IsCompleted && ticket.IsCompleted)
                 {
                     ticket.MarkUndone();
                 }
-                
+
                 _ticketsModifier.UpdateTicket(ticket);
                 return RedirectToAction(nameof(Index));
             }
+
             var categories = _categoryFinder.FindAll();
-            var categoryOptions = categories.Select(c=> new SelectListItem {
+            var categoryOptions = categories.Select(c => new SelectListItem
+            {
                 Text = c.Name,
                 Value = c.Id.ToString()
             }).ToArray();
             model.Categories = categoryOptions;
             return View(model);
         }
+
         // GET: Tickets/Delete/5
         [Authorize]
         [HttpGet("{id}")]
@@ -241,7 +237,11 @@ namespace SupportApp.Controllers
             var ticket = _ticketsFinder.Find(id);
             if (ticket == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
+            }
+            if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+            {
+                return Forbid();
             }
 
             return View(ticket);
@@ -256,16 +256,17 @@ namespace SupportApp.Controllers
             _ticketsModifier.RemoveTicket(id);
             return RedirectToAction(nameof(Index));
         }
+
         // POST: Tickets/RemoveByAuthor/Name
         [ActionName("RemoveByAuthor")]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public IActionResult RemoveByAuthor(string author)
+        public IActionResult RemoveByAuthor()
         {
-            _ticketsFinder.FindAllByAuthor(author, false);
-            _ticketsModifier.RemoveAllByAuthor(author);
+            _ticketsModifier.RemoveAllByAuthor(User.GetUserId());
             return RedirectToAction(nameof(Index));
         }
+
         [HttpPost("{id}")]
         [Authorize]
         public IActionResult MarkDone(int id)

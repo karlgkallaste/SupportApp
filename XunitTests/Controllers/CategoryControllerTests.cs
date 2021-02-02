@@ -1,6 +1,10 @@
+using System;
 using System.Linq;
+using System.Security.Claims;
 using AutoFixture;
 using FluentAssertions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
@@ -17,6 +21,7 @@ namespace XunitTests.Controllers
         private Fixture _fixture;
         private Mock<ICategoryFinder> _categoryFinderMock;
         private Mock<ICategoryModifier> _categoryModifierMock;
+        private ClaimsPrincipal _user;
 
 
         [SetUp]
@@ -26,6 +31,14 @@ namespace XunitTests.Controllers
             _categoryFinderMock = new Mock<ICategoryFinder>();
             _categoryModifierMock = new Mock<ICategoryModifier>();
             _controller = new CategoryController(_categoryModifierMock.Object, _categoryFinderMock.Object);
+            _user = new ClaimsPrincipal();
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = _user
+                }
+            };
         }
 
        [Test]
@@ -63,7 +76,7 @@ namespace XunitTests.Controllers
             result.Model.Should().BeEquivalentTo(expectedViewModels);
         }
         [Test]
-        public void Create_new_category_gets_added()
+        public void Create_adds_new_category()
         {
             // Arrange
             var model = _fixture.Create<CreateCategoryModel>();
@@ -82,7 +95,7 @@ namespace XunitTests.Controllers
         }
 
         [Test]
-        public void DeleteConfirmed_ticket_gets_deleted_by_id_and_user_gets_redirected()
+        public void DeleteConfirmed_deletes_category_by_id_and_redirects_user()
         {
             // Arrange
             var categoryId = 1;
@@ -106,6 +119,13 @@ namespace XunitTests.Controllers
             
             // Assert
             result.ActionName.Should().Be(nameof(TicketsController.Index));
+        }
+        
+        [Test]
+        public void Controller_is_authorized_with_Admin_role()
+        {
+            // Act & Assert
+            _controller.AssertControllerIsAuthorized("Admin");
         }
 
     }

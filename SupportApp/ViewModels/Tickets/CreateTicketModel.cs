@@ -19,9 +19,6 @@ namespace SupportApp.ViewModels.Tickets
         [Required]
         [MaxLength(200)]
         public string Description { get; set; }
-        [Required]
-        [MaxLength(30)]
-        public string Author { get; set; }
         public DateTime CreatedAt { get; set; }
         public int Category { get; set; }
 
@@ -29,9 +26,9 @@ namespace SupportApp.ViewModels.Tickets
 
         
         
-        public Ticket ToDomainObject()
+        public Ticket ToDomainObject(Guid userId)
         {
-            var ticket = new Ticket(Description, Title, Author, CreatedAt, Category);
+            var ticket = new Ticket(Description, Title, userId, CreatedAt, Category);
             CreatedAt = DateTime.Now;
 
             return ticket;

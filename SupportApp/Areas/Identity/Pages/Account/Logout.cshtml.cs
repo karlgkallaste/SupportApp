@@ -14,10 +14,10 @@ namespace SupportApp.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class LogoutModel : PageModel
     {
-        private readonly SignInManager<SupportAppUser> _signInManager;
+        private readonly ISupportAppSignInManager _signInManager;
         private readonly ILogger<LogoutModel> _logger;
 
-        public LogoutModel(SignInManager<SupportAppUser> signInManager, ILogger<LogoutModel> logger)
+        public LogoutModel(ISupportAppSignInManager signInManager, ILogger<LogoutModel> logger)
         {
             _signInManager = signInManager;
             _logger = logger;

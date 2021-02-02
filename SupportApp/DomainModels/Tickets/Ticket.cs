@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Areas.Identity.Data;
+using SupportApp.Migrations;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
 using SupportApp.ViewModels.Categories;
@@ -15,7 +18,8 @@ namespace SupportApp.Models.Tickets
         public int Id { get; private set; }
         public string Title { get; private set; }
         public string Description { get; private set; }
-        public string Author { get; private set; }
+        public Guid Author { get; private set; }
+        
         public DateTime CreatedAt { get; private set; }
         public DateTime Deadline { get; private set; }
         public DateTime? CompletedAt { get; private set; }
@@ -29,7 +33,7 @@ namespace SupportApp.Models.Tickets
         {
             return Comments;
         }
-        public Ticket(string description, string title, string author, DateTime createdAt, int categoryId)
+        public Ticket(string description, string title, Guid author, DateTime createdAt, int categoryId)
         {
             CreatedAt = DateTime.Now;
             Deadline = CreatedAt.AddDays(2);
@@ -70,8 +74,8 @@ namespace SupportApp.Models.Tickets
             {
                 modelBuilder.Entity<Ticket>().HasMany<Comment>(t => t.Comments)
                     .WithOne(x => x.Ticket)
-                    .HasForeignKey(x => x.TicketId);
-
+                    .HasForeignKey(x => x.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
                 modelBuilder.Entity<Ticket>().HasOne<Category>(t => t.Category);
             }
         }

@@ -15,8 +15,6 @@ namespace SupportApp.Data
             : base(options)
         {
         }
-        public DbSet<SupportAppUser> Users { get; private set; }
-        public DbSet<SupportAppRole> Roles { get; private set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

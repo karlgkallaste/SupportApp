@@ -5,12 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportApp.Data;
 using Microsoft.EntityFrameworkCore;
+using SupportApp.Areas.Identity;
 using SupportApp.Areas.Identity.Data;
+using SupportApp.Areas.Identity.Pages.Account;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
@@ -41,9 +45,8 @@ namespace SupportApp
             services.AddDbContext<SupportAppUserContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("SupportAppContext")));
 
-            services.AddDefaultIdentity<SupportAppUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddRoles<SupportAppRole>()
-                .AddEntityFrameworkStores<SupportAppUserContext>();
+            services.AddIdentity<SupportAppUser, SupportAppRole>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<SupportAppUserContext>().AddDefaultUI().AddDefaultTokenProviders();
             
             services.AddScoped<ICommentFinder, CommentFinder>();
             services.AddScoped<ICommentModifier, CommentModifier>();
@@ -51,7 +54,9 @@ namespace SupportApp
             services.AddScoped<ITicketsModifier, TicketsModifier>();
             services.AddScoped<ICategoryFinder, CategoryFinder>();
             services.AddScoped<ICategoryModifier, CategoryModifier>();
-            
+            services.AddScoped<ISupportAppSignInManager, SupportAppSignInManager>();
+
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
