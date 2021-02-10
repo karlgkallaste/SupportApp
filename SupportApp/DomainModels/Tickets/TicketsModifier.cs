@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using SupportApp.Data;
+using SupportApp.Models.Images;
 
 namespace SupportApp.Models.Tickets
 {
@@ -48,10 +49,11 @@ namespace SupportApp.Models.Tickets
             return ticket;
         }
 
+
         public void RemoveAllByAuthor(Guid author)
         {
             var ticketSet = _context.Set<Ticket>();
-            var tickets = _context.Queryable<Ticket>().Where(t => t.Author == author).ToArray();
+            var tickets = _context.Queryable<Ticket>().Where(t => t.AuthorId == author).ToArray();
 
             ticketSet.RemoveRange(tickets);
             _context.SaveChanges();

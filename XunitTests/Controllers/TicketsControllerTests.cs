@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -9,10 +14,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Internal;
 using SupportApp.Areas.Identity.Data;
 using SupportApp.Controllers;
+using SupportApp.Infrastructure;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
+using SupportApp.Models.Images;
 using SupportApp.Models.Tickets;
 using SupportApp.ViewModels.Tickets;
 
@@ -27,6 +35,7 @@ namespace XunitTests.Controllers
         private Mock<ICategoryFinder> _categoryFinderMock;
 
         private ClaimsPrincipal _user;
+        private Mock<IMemoryStreamProvider> _memorySteamProviderMock;
 
         [SetUp]
         public void Setup()
@@ -35,8 +44,9 @@ namespace XunitTests.Controllers
             _ticketsFinderMock = new Mock<ITicketsFinder>();
             _ticketsModifierMock = new Mock<ITicketsModifier>();
             _categoryFinderMock = new Mock<ICategoryFinder>();
+            _memorySteamProviderMock = new Mock<IMemoryStreamProvider>();
             _controller = new TicketsController(_ticketsFinderMock.Object, _ticketsModifierMock.Object,
-                _categoryFinderMock.Object);
+                _categoryFinderMock.Object, _memorySteamProviderMock.Object);
             _user = new ClaimsPrincipal();
             _controller.ControllerContext = new ControllerContext
             {
@@ -192,12 +202,14 @@ namespace XunitTests.Controllers
             // Arrange
             var ticket = _fixture.Create<Ticket>();
             ticket.SetProperty(t => t.Category, _fixture.Create<Category>());
-            ticket.SetProperty(t => t.Author, userId);
+            ticket.SetProperty(t => t.AuthorId, userId);
 
             var comment1 = _fixture.Create<Comment>();
             ticket.AddComment(comment1);
             var comment2 = _fixture.Create<Comment>();
             ticket.AddComment(comment2);
+            var image = _fixture.Create<Image>();
+            ticket.AddImage(image);
 
             _ticketsFinderMock.Setup(r => r.Find(ticket.Id))
                 .Returns(ticket);
@@ -215,6 +227,7 @@ namespace XunitTests.Controllers
             viewModel.Category.Should().Be(ticket.Category.Name);
             viewModel.Comments[0].Content.Should().Be(comment1.Content);
             viewModel.Comments[1].Content.Should().Be(comment2.Content);
+            viewModel.Images[0].DataBase64.Should().BeEquivalentTo(Convert.ToBase64String(image.Data));
         }
         [Test]
         public void Details_returns_Forbidden_If_User_Is_Not_Author_or_Admin()
@@ -251,6 +264,8 @@ namespace XunitTests.Controllers
             ticket.AddComment(comment1);
             var comment2 = _fixture.Create<Comment>();
             ticket.AddComment(comment2);
+            var image = _fixture.Create<Image>();
+            ticket.AddImage(image);
 
             _ticketsFinderMock.Setup(r => r.Find(ticket.Id))
                 .Returns(ticket);
@@ -268,6 +283,118 @@ namespace XunitTests.Controllers
             viewModel.Category.Should().Be(ticket.Category.Name);
             viewModel.Comments[0].Content.Should().Be(comment1.Content);
             viewModel.Comments[1].Content.Should().Be(comment2.Content);
+            viewModel.Images[0].DataBase64.Should().Be(Convert.ToBase64String(image.Data));
+        }
+
+        [Test]
+        public async Task UploadImage_Finds_Ticket_By_Id_And_Uploads_Image()
+        {
+            var userId = Guid.NewGuid();
+            _user.AddIdentity(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, "Admin")
+            }));
+            
+            var formFile1Mock = new Mock<IFormFile>();
+            var formFile2Mock = new Mock<IFormFile>();
+            var ticket = _fixture.Create<Ticket>();
+
+            var memoryStream1Mock = new Mock<MemoryStream>();
+            
+            memoryStream1Mock.Setup(m => m.Length)
+                .Returns(2097152);
+            var file1Data = new byte[] { 1,2,3};
+            memoryStream1Mock.Setup(s => s.ToArray())
+                .Returns(file1Data);
+            
+            var memoryStream2Mock = new Mock<MemoryStream>();
+            memoryStream2Mock.Setup(m => m.Length)
+                .Returns(2097151);
+            var file2Data = new byte[] { 4,2,6};
+            memoryStream2Mock.Setup(s => s.ToArray())
+                .Returns(file2Data);
+            
+            _memorySteamProviderMock.SetupSequence(p => p.Provide())
+                .Returns(memoryStream1Mock.Object)
+                .Returns(memoryStream2Mock.Object);
+            
+            _ticketsFinderMock.Setup(r => r.Find(ticket.Id))
+                .Returns(ticket);
+            
+            // Act
+            var result = (RedirectToActionResult) await _controller.UploadImage(ticket.Id, new []{formFile1Mock.Object, formFile2Mock.Object}.ToList());
+            
+            // Assert
+            result.ActionName.Should().Be(nameof(TicketsController.Index));
+            
+            formFile1Mock.Verify(f => f.CopyToAsync(memoryStream1Mock.Object, default), Times.Once);
+            formFile2Mock.Verify(f => f.CopyToAsync(memoryStream2Mock.Object, default), Times.Once);
+
+            var images = ticket.GetImages().ToArray();
+            images.Length.Should().Be(2);
+            images[0].Data.Should().BeEquivalentTo(file1Data);
+            images[1].Data.Should().BeEquivalentTo(file2Data);
+            
+            _ticketsModifierMock.Verify(m => m.UpdateTicket(ticket), Times.Once);
+        }
+
+        [Test]
+        public async Task UploadImages_Returns_Error_When_Any_File_Exceeds_2_MB_Size()
+        {
+            var formFile1Mock = new Mock<IFormFile>();
+            formFile1Mock.Setup(f => f.Length)
+                .Returns(2097152);
+            
+            var formFile2Mock = new Mock<IFormFile>();
+            formFile2Mock.Setup(f => f.Length)
+                .Returns(2097153);
+            
+            var userId = Guid.NewGuid();
+            _user.AddIdentity(new ClaimsIdentity(new []
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, "User")
+            }));
+            
+            var ticket = _fixture.Create<Ticket>()
+                .SetProperty(t => t.Category, _fixture.Create<Category>())
+                .SetProperty(t => t.AuthorId, userId);
+
+            _ticketsFinderMock.Setup(r => r.Find(ticket.Id))
+                .Returns(ticket);
+            
+            // Act
+            var result = (ViewResult) await _controller.UploadImage(ticket.Id, new[] {formFile1Mock.Object, formFile2Mock.Object}.ToList());
+            
+            // Assert
+            _controller.ModelState.ToArray()
+                .Any(s => s.Value.Errors.Any(e => e.ErrorMessage == "Maksimaalne faili suurus on 2 MB."))
+                .Should().BeTrue();
+
+            result.ViewName.Should().Be(nameof(TicketsController.Details));
+        }
+        
+        [Test]
+        public void UploadImage_Forbidden_If_User_Not_Author_Or_Admin()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _user.AddIdentity(new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, "User")
+            }));
+            var ticket = _fixture.Create<Ticket>();
+            ticket.SetProperty(t => t.AuthorId, new Guid());
+            
+
+            _ticketsFinderMock.Setup(r => r.Find(ticket.Id))
+                .Returns(ticket);
+            // Act
+            var result = _controller.Edit(ticket.Id);
+
+
+            // Assert
+            result.Should().BeOfType<ForbidResult>();
+            
         }
 
         [Test]
@@ -291,7 +418,6 @@ namespace XunitTests.Controllers
             // Assert
             createdTicket.Title.Should().Be(model.Title);
             createdTicket.Description.Should().Be(model.Description);
-            createdTicket.Author.Should().Be(userId);
             createdTicket.CreatedAt.Should().BeCloseTo(DateTime.Now, TimeSpan.FromMilliseconds(200));
             createdTicket.Deadline.Should().Be(createdTicket.CreatedAt.AddDays(2));
             createdTicket.IsCompleted.Should().BeFalse();
@@ -300,6 +426,7 @@ namespace XunitTests.Controllers
 
             result.ActionName.Should().Be(nameof(TicketsController.Index));
         }
+        
 
         [Test]
         public void DeleteConfirmed_ticket_gets_deleted_by_id_and_user_gets_redirected()
@@ -377,7 +504,7 @@ namespace XunitTests.Controllers
             model.Description = "NewDesc";
 
             var ticket = _fixture.Create<Ticket>();
-            ticket.SetProperty(t => t.Author, userId);
+            ticket.SetProperty(t => t.AuthorId, userId);
             ticket.SetProperty(t => t.Title, "yo");
 
             _ticketsFinderMock.Setup(r => r.Find(model.Id))
@@ -444,7 +571,7 @@ namespace XunitTests.Controllers
             model.IsCompleted = true;
 
             var ticket = _fixture.Create<Ticket>();
-            ticket.SetProperty(t => t.Author, userId);
+            ticket.SetProperty(t => t.AuthorId, userId);
             ticket.MarkUndone();
 
             _ticketsFinderMock.Setup(r => r.Find(model.Id))
@@ -454,7 +581,7 @@ namespace XunitTests.Controllers
             var result = (RedirectToActionResult) _controller.Edit(model);
 
             // assert
-            ticket.IsCompleted.Should().BeTrue();
+            ticket.IsCompleted.Should().Be(false);
             _ticketsModifierMock.Verify(m => m.UpdateTicket(ticket), Times.Once);
         }
 
@@ -470,7 +597,7 @@ namespace XunitTests.Controllers
             model.IsCompleted = false;
 
             var ticket = _fixture.Create<Ticket>();
-            ticket.SetProperty(t => t.Author, userId);
+            ticket.SetProperty(t => t.AuthorId, userId);
             ticket.MarkUndone();
 
             _ticketsFinderMock.Setup(r => r.Find(model.Id))

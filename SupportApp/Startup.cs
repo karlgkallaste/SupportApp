@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using SupportApp.Areas.Identity;
 using SupportApp.Areas.Identity.Data;
 using SupportApp.Areas.Identity.Pages.Account;
+using SupportApp.Infrastructure;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
 using SupportApp.Models.Tickets;
@@ -55,6 +56,7 @@ namespace SupportApp
             services.AddScoped<ICategoryFinder, CategoryFinder>();
             services.AddScoped<ICategoryModifier, CategoryModifier>();
             services.AddScoped<ISupportAppSignInManager, SupportAppSignInManager>();
+            services.AddScoped<IMemoryStreamProvider, MemoryStreamProvider>();
 
 
         }

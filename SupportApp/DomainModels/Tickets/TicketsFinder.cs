@@ -35,7 +35,7 @@ namespace SupportApp.Models.Tickets
 
         public IReadOnlyCollection<Ticket> FindAllByAuthor(Guid author, bool completed, string searchString)
         {
-            return _context.Queryable<Ticket>().Where(t => t.Author == author && t.IsCompleted == completed).ToArray();
+            return _context.Queryable<Ticket>().Where(t => t.AuthorId == author && t.IsCompleted == completed).ToArray();
         }
         public IReadOnlyCollection<Ticket> FindAllByOverDueTickets(bool completed)
         {

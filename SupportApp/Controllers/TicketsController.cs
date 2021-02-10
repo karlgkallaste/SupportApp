@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SupportApp.Areas.Identity.Data;
 using SupportApp.Extensions;
+using SupportApp.Infrastructure;
 using SupportApp.Models.Categories;
 using SupportApp.Models.Comments;
+using SupportApp.Models.Images;
 using SupportApp.Models.Tickets;
 using SupportApp.ViewModels.Comments;
 using SupportApp.ViewModels.Tickets;
@@ -22,24 +26,26 @@ namespace SupportApp.Controllers
         private readonly ITicketsFinder _ticketsFinder;
         private readonly ITicketsModifier _ticketsModifier;
         private readonly ICategoryFinder _categoryFinder;
+        private readonly IMemoryStreamProvider _memoryStreamProvider;
 
 
         public TicketsController(ITicketsFinder ticketsFinder, ITicketsModifier ticketsModifier,
-            ICategoryFinder categoryFinder)
+            ICategoryFinder categoryFinder, IMemoryStreamProvider memoryStreamProvider)
         {
             _ticketsFinder = ticketsFinder;
             _ticketsModifier = ticketsModifier;
             _categoryFinder = categoryFinder;
+            _memoryStreamProvider = memoryStreamProvider;
         }
 
         // GET: Tickets
         [Authorize]
         public IActionResult Index(string searchString)
         {
-            var incompleteTickets = User.IsInRole("Admin") 
+            var incompleteTickets = User.IsInRole("Admin")
                 ? _ticketsFinder.FindAllWithStatus(false, searchString)
                 : _ticketsFinder.FindAllByAuthor(User.GetUserId(), false, searchString);
-            
+
             var userViewModels = incompleteTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
@@ -52,10 +58,10 @@ namespace SupportApp.Controllers
         // GET: Completed Tickets
         public IActionResult Completed(string searchString)
         {
-            var completeTickets = User.IsInRole("Admin") 
+            var completeTickets = User.IsInRole("Admin")
                 ? _ticketsFinder.FindAllWithStatus(true, searchString)
                 : _ticketsFinder.FindAllByAuthor(User.GetUserId(), true, searchString);
-            
+
             var userViewModels = completeTickets.Select(t => new TicketListViewModel
             {
                 Id = t.Id,
@@ -80,6 +86,35 @@ namespace SupportApp.Controllers
             return View(viewModels);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UploadImage(int id, List<IFormFile> files)
+        {
+            if (files.Any(f => f.Length > 2097152))
+            {
+                ModelState.AddModelError("Images", "Maksimaalne faili suurus on 2 MB.");
+                return Details(id);
+            }
+
+            var ticket = _ticketsFinder.Find(id);
+            if (ticket.AuthorId != User.GetUserId() && !User.IsInRole("Admin"))
+            {
+                return Forbid();
+            }
+
+            foreach (var formFile in files)
+            {
+                using (var memoryStream = _memoryStreamProvider.Provide())
+                {
+                    await formFile.CopyToAsync(memoryStream);
+
+                    var file = new Image(memoryStream.ToArray());
+                    ticket.AddImage(file);
+                }
+            }
+
+            _ticketsModifier.UpdateTicket(ticket);
+            return RedirectToAction(nameof(Index));
+        }
 
         [Authorize]
         // GET: Tickets/Details/5
@@ -91,7 +126,8 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
-            if (ticket.Author != User.GetUserId() && !User.IsInRole("Admin"))
+
+            if (ticket.AuthorId != User.GetUserId() && !User.IsInRole("Admin"))
             {
                 return Forbid();
             }
@@ -102,11 +138,15 @@ namespace SupportApp.Controllers
                 Title = ticket.Title,
                 Description = ticket.Description,
                 Deadline = ticket.Deadline,
-                Author = User.Identity.Name,
+                Author = ticket.Author,
                 CreatedAt = ticket.CreatedAt,
                 CompletedAt = ticket.CompletedAt,
                 IsCompleted = ticket.IsCompleted,
                 Category = ticket.Category.Name,
+                Images = ticket.GetImages().Select(i => new ImageViewModel()
+                {
+                    DataBase64 = Convert.ToBase64String(i.Data)
+                }).ToList(),
                 Comments = ticket.GetComments().Select(c => new CommentListViewModel
                 {
                     Id = c.Id,
@@ -114,7 +154,7 @@ namespace SupportApp.Controllers
                 }).ToList()
             };
 
-            return View(viewModel);
+            return View(nameof(Details), viewModel);
         }
 
         // GET: Tickets/Create
@@ -146,7 +186,7 @@ namespace SupportApp.Controllers
         public IActionResult Create(CreateTicketModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            _ticketsModifier.Add(model.ToDomainObject(User.GetUserId()));
+            _ticketsModifier.Add(model.ToDomainObject(User.GetUserId(),User.Identity.Name));
             return RedirectToAction(nameof(Index));
         }
 
@@ -160,7 +200,8 @@ namespace SupportApp.Controllers
             {
                 return NotFound();
             }
-            if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+
+            if (ticket.AuthorId != User.GetUserId() && User.IsInRole("Admin").Equals(false))
             {
                 return Forbid();
             }
@@ -199,21 +240,22 @@ namespace SupportApp.Controllers
                 {
                     return NotFound();
                 }
-                if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+
+                if (ticket.AuthorId != User.GetUserId() && User.IsInRole("Admin").Equals(false))
                 {
                     return Forbid();
                 }
 
                 ticket.EditTicket(model.Description, model.Title, model.CategoryId);
 
-                if (model.IsCompleted && !ticket.IsCompleted)
-                {
-                    ticket.MarkDone();
-                }
-                else if (!model.IsCompleted && ticket.IsCompleted)
-                {
-                    ticket.MarkUndone();
-                }
+                // if (model.IsCompleted && !ticket.IsCompleted)
+                // {
+                //     ticket.MarkDone();
+                // }
+                // else if (!model.IsCompleted && ticket.IsCompleted)
+                // {
+                //     ticket.MarkUndone();
+                // }
 
                 _ticketsModifier.UpdateTicket(ticket);
                 return RedirectToAction(nameof(Index));
@@ -239,7 +281,8 @@ namespace SupportApp.Controllers
             {
                 return RedirectToAction(nameof(Index));
             }
-            if (ticket.Author != User.GetUserId() && User.IsInRole("Admin").Equals(false))
+
+            if (ticket.AuthorId != User.GetUserId() && User.IsInRole("Admin").Equals(false))
             {
                 return Forbid();
             }
